@@ -1,0 +1,11 @@
+/home/robert/GolandProjects/sc-attestation-rs/target/rls/debug/deps/wee_alloc-58c83c272a530497.rmeta: /home/robert/.cargo/registry/src/github.com-1ecc6299db9ec823/wee_alloc-0.4.5/src/lib.rs /home/robert/.cargo/registry/src/github.com-1ecc6299db9ec823/wee_alloc-0.4.5/src/extra_assert.rs /home/robert/.cargo/registry/src/github.com-1ecc6299db9ec823/wee_alloc-0.4.5/src/const_init.rs /home/robert/.cargo/registry/src/github.com-1ecc6299db9ec823/wee_alloc-0.4.5/src/neighbors.rs /home/robert/.cargo/registry/src/github.com-1ecc6299db9ec823/wee_alloc-0.4.5/src/size_classes.rs /home/robert/.cargo/registry/src/github.com-1ecc6299db9ec823/wee_alloc-0.4.5/src/imp_unix.rs /home/robert/.cargo/registry/src/github.com-1ecc6299db9ec823/wee_alloc-0.4.5/src/size_classes_init.rs
+
+/home/robert/GolandProjects/sc-attestation-rs/target/rls/debug/deps/wee_alloc-58c83c272a530497.d: /home/robert/.cargo/registry/src/github.com-1ecc6299db9ec823/wee_alloc-0.4.5/src/lib.rs /home/robert/.cargo/registry/src/github.com-1ecc6299db9ec823/wee_alloc-0.4.5/src/extra_assert.rs /home/robert/.cargo/registry/src/github.com-1ecc6299db9ec823/wee_alloc-0.4.5/src/const_init.rs /home/robert/.cargo/registry/src/github.com-1ecc6299db9ec823/wee_alloc-0.4.5/src/neighbors.rs /home/robert/.cargo/registry/src/github.com-1ecc6299db9ec823/wee_alloc-0.4.5/src/size_classes.rs /home/robert/.cargo/registry/src/github.com-1ecc6299db9ec823/wee_alloc-0.4.5/src/imp_unix.rs /home/robert/.cargo/registry/src/github.com-1ecc6299db9ec823/wee_alloc-0.4.5/src/size_classes_init.rs
+
+/home/robert/.cargo/registry/src/github.com-1ecc6299db9ec823/wee_alloc-0.4.5/src/lib.rs:
+/home/robert/.cargo/registry/src/github.com-1ecc6299db9ec823/wee_alloc-0.4.5/src/extra_assert.rs:
+/home/robert/.cargo/registry/src/github.com-1ecc6299db9ec823/wee_alloc-0.4.5/src/const_init.rs:
+/home/robert/.cargo/registry/src/github.com-1ecc6299db9ec823/wee_alloc-0.4.5/src/neighbors.rs:
+/home/robert/.cargo/registry/src/github.com-1ecc6299db9ec823/wee_alloc-0.4.5/src/size_classes.rs:
+/home/robert/.cargo/registry/src/github.com-1ecc6299db9ec823/wee_alloc-0.4.5/src/imp_unix.rs:
+/home/robert/.cargo/registry/src/github.com-1ecc6299db9ec823/wee_alloc-0.4.5/src/size_classes_init.rs:

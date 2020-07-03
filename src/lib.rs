@@ -1,34 +1,38 @@
 #![no_std]
 #![no_main]
 #![allow(unused_attributes)]
+#![allow(non_snake_case)]
+
+pub mod user_state;
+use user_state::*;
 
 imports!();
 
 
 #[elrond_wasm_derive::contract(AttestationImpl)]
-pub trait Crowdfunding {
+pub trait Attestation {
     #[init]
-    fn init(&self, registration_cost: &BigUint, address: &Address, maxNonceDiff: u64) {
+    fn init(&self, registration_cost: &BigUint, address: &Address, maxNonceDiff: u64) -> Result<(), SCError> {
         self._set_registration_cost(registration_cost);
-        self._set_attestator_state(address, &ValueState::Approved(address.clone()))
+        self._set_attestator_state(address, &ValueState::Approved);
         
-        let mut attestatorList: Vec<Address> = Vec::new()
-        attestatorList.push(address)
+        let mut attestatorList: Vec<Address> = Vec::new();
+        attestatorList.push(address.clone());
 
-        self._set_attestator_list(&attestator_list)
-        self._set_max_nonce_diff(maxNonceDiff)
+        self._set_attestator_list(&attestatorList);
+        self._set_max_nonce_diff(maxNonceDiff);
 
         Ok(())
     }
 
     #[payable]
     #[endpoint]
-    fn register(&self, obfuscatedData: &H256, address: &Address, #[payment] payment: BigUint) -> Result<(), SCError> {
+    fn register(&self, obfuscatedData: &H256, #[payment] payment: BigUint) -> Result<(), SCError> {
         if payment != self.getRegistrationCost() {
             return sc_error!("should pay exactly the registration cost");
         }
 
-        let mut optUserState = self._get_user_state(obfuscatedData)
+        let mut optUserState = self._get_user_state(obfuscatedData);
         if optUserState.is_none() {
             optUserState = Some(User {
                 valueState:  ValueState::None,
@@ -41,7 +45,7 @@ pub trait Crowdfunding {
         }
 
         let mut userState = optUserState.unwrap();
-        if userState.valueState = ValueState::Approved {
+        if userState.valueState == ValueState::Approved {
             return sc_error!("user already registered");
         }
 
@@ -56,12 +60,12 @@ pub trait Crowdfunding {
 
     #[endpoint]
     fn savePublicInfo(&self, obfuscatedData: &H256, publicInfo: &H256) -> Result<(), SCError> {
-        let as = self._get_attestator_state(self.get_caller());
-        if !as.exists() {
+        let attestatorS = self._get_attestator_state(&self.get_caller());
+        if !attestatorS.exists() {
             return sc_error!("caller is not an attestator");
         }
 
-        let mut optUserState = self._get_user_state(obfuscatedData)
+        let optUserState = self._get_user_state(obfuscatedData);
         if optUserState.is_none() {
             return sc_error!("there is not registered user under key");
         }
@@ -72,10 +76,10 @@ pub trait Crowdfunding {
         }
 
         if userState.attester != self.get_caller() {
-            return sc_error("not the selected attester")
+            return sc_error!("not the selected attester");
         }
 
-        userState.publicInfo = publicInfo;
+        userState.publicInfo = publicInfo.clone();
         userState.nonce = self.get_block_nonce();
         userState.valueState = ValueState::Pending;
 
@@ -86,7 +90,7 @@ pub trait Crowdfunding {
 
     #[endpoint]
     fn attest(&self, obfuscatedData: &H256, privateInfo: &H256) -> Result<(), SCError> {
-        let mut optUserState = self._get_user_state(obfuscatedData)
+        let optUserState = self._get_user_state(obfuscatedData);
         if optUserState.is_none() {
             return sc_error!("there is not registered user under key");
         }
@@ -96,12 +100,12 @@ pub trait Crowdfunding {
             return sc_error!("user already registered");
         }
 
-        let hashed = self.keccak256(privateInfo);
-        if hashed != userState.publicInfo {
+        let hashed = self.keccak256(privateInfo.as_bytes());
+        if hashed != userState.publicInfo.as_bytes() {
             return sc_error!("private/public info missmatch");
         }
 
-        userState.privateInfo = privateInfo
+        userState.privateInfo = privateInfo.clone();
         userState.valueState = ValueState::Approved;
 
         Ok(())
@@ -109,47 +113,61 @@ pub trait Crowdfunding {
 
     #[endpoint]
     fn addAttestator(&self, address: &Address) -> Result<(), SCError> {
-        let contract_owner = self.getContractOwner();
-        if &self.get_caller != &contract_owner {
+        let contract_owner = self.get_owner_address();
+        if &self.get_caller() != &contract_owner {
             return sc_error!("only owner can add attestator");
         }
 
-        let as = self._get_attestator_state(address)
-        if as.exists() {
+        let attestatorS = self._get_attestator_state(address);
+        if attestatorS.exists() {
             return sc_error!("attestator already exists");
         }
 
-        self._set_attestator_state(address, &ValueState::Approved(address.clone()));
+        self._set_attestator_state(address, &ValueState::Approved);
         
         let mut attestatorList = self._get_attestator_list();
-        attestatorList.push(address);
+        attestatorList.push(address.clone());
 
-        self._set_attestator_list(&attestator_list);
+        self._set_attestator_list(&attestatorList);
 
         Ok(())
     }
 
     #[endpoint]
     fn removeAttestator(&self, address: &Address) -> Result<(), SCError> {
-        let contract_owner = self.getContractOwner();
-        if &self.get_caller != &contract_owner {
+        let contract_owner = self.get_owner_address();
+        if &self.get_caller() != &contract_owner {
             return sc_error!("only owner can add attestator");
         }
 
-        let as = self._get_attestator_state(address)
-        if !as.exists() {
+        let attestatorS = self._get_attestator_state(address);
+        if !attestatorS.exists() {
             return sc_error!("attestator does not exists");
         }
         
         let mut attestatorList = self._get_attestator_list();
-        attestatorList.remove_item(address);
+        if let Some(pos) = attestatorList.iter().position(|x| *x == address.clone()) {
+            attestatorList.remove(pos);
+        }
 
         if attestatorList.len() == 0 {
             return sc_error!("cannot delete last attestator");
         }
 
-        self._set_attestator_list(&attestator_list);
+        self._set_attestator_list(&attestatorList);
         self._set_attestator_state(address, &ValueState::None);
+
+        Ok(())
+    }
+
+    #[endpoint]
+    fn claim(&self) -> Result<(), SCError>  {
+        let contract_owner = self.get_owner_address();
+        if &self.get_caller() != &contract_owner {
+            return sc_error!("only owner can claim");
+        }
+
+        self.send_tx(&contract_owner, &self.get_sc_balance(), "dns claim");
 
         Ok(())
     }
@@ -158,7 +176,7 @@ pub trait Crowdfunding {
     fn selectAttestator(&self) -> Address {
         let attestatorList = self._get_attestator_list();
         //TODO add random selection from length of list and the random number
-        return attestatorList[0]
+        return attestatorList[0].clone()
     }
 
     // STORAGE

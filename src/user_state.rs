@@ -1,6 +1,8 @@
 use elrond_wasm::esd_light::*;
-use elrond_wasm::Vec;
 
+imports!();
+
+#[derive(PartialEq)]
 pub enum ValueState {
     None,
     Requested,
@@ -26,13 +28,13 @@ impl ValueState {
         }
     }
 
-    fn from_u8(v: u8) -> Result<Self, DeError> {
+    fn from_u8(v: u8) -> Result<Self, DecodeError> {
         match v {
             0 => Ok(ValueState::None),
             1 => Ok(ValueState::Requested),
             2 => Ok(ValueState::Pending),
             3 => Ok(ValueState::Approved),
-            _ => Err(DeError::InvalidValue),
+            _ => Err(DecodeError::InvalidValue),
         }
     }
 }
@@ -51,13 +53,13 @@ impl Encode for ValueState {
 
 impl Decode for ValueState {
     #[inline]
-	fn top_decode<I: Input>(input: &mut I) -> Result<Self, DeError> {
-        NodeState::from_u8(u8::top_decode(input)?)
+	fn top_decode<I: Input>(input: &mut I) -> Result<Self, DecodeError> {
+        ValueState::from_u8(u8::top_decode(input)?)
     }
     
     #[inline]
-	fn dep_decode<I: Input>(input: &mut I) -> Result<Self, DeError> {
-        NodeState::from_u8(u8::dep_decode(input)?)
+	fn dep_decode<I: Input>(input: &mut I) -> Result<Self, DecodeError> {
+        ValueState::from_u8(u8::dep_decode(input)?)
     }
 }
 

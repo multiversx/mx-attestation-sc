@@ -44,18 +44,21 @@ pub trait Attestation {
             });
         }
 
-        let mut userState = optUserState.unwrap();
-        if userState.valueState == ValueState::Approved {
-            return sc_error!("user already registered");
+        if let Some(userState) = &mut optUserState {
+            if userState.valueState == ValueState::Approved {
+                return sc_error!("user already registered");
+            }
+    
+            userState.attester = self.selectAttestator();
+            userState.nonce = self.get_block_nonce();
+            userState.valueState = ValueState::Requested;
+    
+            self._set_user_state(obfuscatedData, &userState);
+    
+            return Ok(())
+        } else {
+            return sc_error!("impossible error")
         }
-
-        userState.attester = self.selectAttestator();
-        userState.nonce = self.get_block_nonce();
-        userState.valueState = ValueState::Requested;
-
-        self._set_user_state(obfuscatedData, &userState);
-
-        Ok(())
     }
 
     #[endpoint]
@@ -65,50 +68,56 @@ pub trait Attestation {
             return sc_error!("caller is not an attestator");
         }
 
-        let optUserState = self._get_user_state(obfuscatedData);
-        if optUserState.is_none() {
+        let mut optUserState = self._get_user_state(obfuscatedData);
+        if let Some(userState) = &mut optUserState {
+            if userState.valueState == ValueState::Approved {
+                return sc_error!("user already registered");
+            }
+    
+            if userState.attester != self.get_caller() {
+                return sc_error!("not the selected attester");
+            }
+    
+            userState.publicInfo = publicInfo.clone();
+            userState.nonce = self.get_block_nonce();
+            userState.valueState = ValueState::Pending;
+    
+            self._set_user_state(obfuscatedData, &userState);
+            self.save_public_info_event(&userState.address, obfuscatedData, publicInfo);
+    
+            return Ok(())
+        } else {
             return sc_error!("there is not registered user under key");
         }
-
-        let mut userState = optUserState.unwrap();
-        if userState.valueState == ValueState::Approved {
-            return sc_error!("user already registered");
-        }
-
-        if userState.attester != self.get_caller() {
-            return sc_error!("not the selected attester");
-        }
-
-        userState.publicInfo = publicInfo.clone();
-        userState.nonce = self.get_block_nonce();
-        userState.valueState = ValueState::Pending;
-
-        self._set_user_state(obfuscatedData, &userState);
-
-        Ok(())
     }
 
     #[endpoint]
     fn attest(&self, obfuscatedData: &H256, privateInfo: &H256) -> Result<(), SCError> {
-        let optUserState = self._get_user_state(obfuscatedData);
-        if optUserState.is_none() {
+        let mut optUserState = self._get_user_state(obfuscatedData);
+
+        if let Some(userState) = &mut optUserState {
+            if userState.valueState != ValueState::Pending {
+                return sc_error!("user already registered");
+            }
+            if userState.address != self.get_caller() {
+                return sc_error!("only user can attest");
+            }
+
+            let hashed = self.keccak256(privateInfo.as_bytes());
+            if hashed != userState.publicInfo.as_bytes() {
+                return sc_error!("private/public info missmatch");
+            }
+
+            userState.privateInfo = privateInfo.clone();  
+            userState.valueState = ValueState::Approved;
+            self._set_user_state(obfuscatedData, &userState);
+
+            self.attestation_ok_event(&self.get_caller(), obfuscatedData);
+
+            return Ok(())
+        } else {
             return sc_error!("there is not registered user under key");
-        }
-
-        let mut userState = optUserState.unwrap();
-        if userState.valueState != ValueState::Pending {
-            return sc_error!("user already registered");
-        }
-
-        let hashed = self.keccak256(privateInfo.as_bytes());
-        if hashed != userState.publicInfo.as_bytes() {
-            return sc_error!("private/public info missmatch");
-        }
-
-        userState.privateInfo = privateInfo.clone();
-        userState.valueState = ValueState::Approved;
-
-        Ok(())
+        }         
     }
 
     #[endpoint]
@@ -172,6 +181,16 @@ pub trait Attestation {
         Ok(())
     }
 
+    #[view(getUserData)]
+    fn getUserData(&self, obfuscatedData: &H256) -> Result<User, SCError> {
+        let optUserState = self._get_user_state(obfuscatedData);
+        if let Some(userState) = optUserState {
+           Ok(userState)
+        } else {
+           sc_error!("not data for key")
+        }
+    }
+
     #[private]
     fn selectAttestator(&self) -> Address {
         let attestatorList = self._get_attestator_list();
@@ -220,4 +239,14 @@ pub trait Attestation {
     #[private]
     #[storage_set("user")]
     fn _set_user_state(&self, obfuscatedData: &H256, user: &User);
+
+    // events
+    #[event("0x0000000000000000000000000000000000000000000000000000000000000001")]
+    fn register_event(&self, user: &Address, obfuscatedData: &H256, attester: &Address);
+
+    #[event("0x0000000000000000000000000000000000000000000000000000000000000002")]
+    fn save_public_info_event(&self, user: &Address, obfuscatedData: &H256, publicData: &H256);
+
+    #[event("0x0000000000000000000000000000000000000000000000000000000000000003")]
+    fn attestation_ok_event(&self, user: &Address, obfuscatedData: &H256);
 }

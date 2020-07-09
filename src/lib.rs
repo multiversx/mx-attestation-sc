@@ -143,6 +143,17 @@ pub trait Attestation {
     }
 
     #[endpoint]
+    fn setRegisterCost(&self, registration_cost: &BigUint) -> Result<(), SCError> {
+        let contract_owner = self.get_owner_address();
+        if &self.get_caller() != &contract_owner {
+            return sc_error!("only owner can add attestator");
+        }
+        
+        self._set_registration_cost(registration_cost);
+        Ok(())
+    }
+
+    #[endpoint]
     fn removeAttestator(&self, address: &Address) -> Result<(), SCError> {
         let contract_owner = self.get_owner_address();
         if &self.get_caller() != &contract_owner {

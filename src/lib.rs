@@ -34,6 +34,11 @@ pub trait Attestation {
 
         let mut optUserState = self._get_user_state(obfuscatedData);
         if optUserState.is_none() {
+            let attestatorS = self._get_attestator_state(obfuscatedData);
+            if attestatorS.exists() {
+                return sc_error!("is not allowed to save under attestator key")
+            }
+
             optUserState = Some(User {
                 valueState:  ValueState::None,
                 publicInfo:  H256::zero(),
@@ -60,7 +65,7 @@ pub trait Attestation {
             userState.nonce = self.get_block_nonce();
             userState.valueState = ValueState::Requested;
     
-            self._set_user_state(obfuscatedData, &userState);
+            self._set_user_state(obfuscatedData, Some(userState.clone()));
     
             return Ok(())
         } else {
@@ -89,7 +94,7 @@ pub trait Attestation {
             userState.nonce = self.get_block_nonce();
             userState.valueState = ValueState::Pending;
     
-            self._set_user_state(obfuscatedData, &userState);
+            self._set_user_state(obfuscatedData, Some(userState.clone()));
             self.save_public_info_event(&userState.address, obfuscatedData, publicInfo);
     
             return Ok(())
@@ -117,7 +122,7 @@ pub trait Attestation {
 
             userState.privateInfo = privateInfo.clone();  
             userState.valueState = ValueState::Approved;
-            self._set_user_state(obfuscatedData, &userState);
+            self._set_user_state(obfuscatedData, Some(userState.clone()));
 
             self.attestation_ok_event(&self.get_caller(), obfuscatedData);
 
@@ -137,6 +142,11 @@ pub trait Attestation {
         let attestatorS = self._get_attestator_state(address);
         if attestatorS.exists() {
             return sc_error!("attestator already exists");
+        }
+
+        let optUserState = self._get_user_state(address);
+        if optUserState.is_some() {
+            
         }
 
         self._set_attestator_state(address, &ValueState::Approved);
@@ -256,7 +266,7 @@ pub trait Attestation {
 
     #[private]
     #[storage_set("user")]
-    fn _set_user_state(&self, obfuscatedData: &H256, user: &User);
+    fn _set_user_state(&self, obfuscatedData: &H256, user: Option<User>);
 
     // events
     #[event("0x0000000000000000000000000000000000000000000000000000000000000001")]

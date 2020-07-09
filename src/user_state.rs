@@ -2,6 +2,7 @@ use elrond_wasm::esd_light::*;
 
 imports!();
 
+#[derive(Clone)]
 #[derive(PartialEq)]
 pub enum ValueState {
     None,
@@ -63,6 +64,7 @@ impl Decode for ValueState {
     }
 }
 
+#[derive(Clone)]
 pub struct User {
     pub valueState:  ValueState,
     pub publicInfo:  H256,

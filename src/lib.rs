@@ -40,13 +40,20 @@ pub trait Attestation {
                 privateInfo: H256::zero(),
                 address:     self.get_caller(),
                 attester:    Address::zero(),
-                nonce:       0,
+                nonce:       self.get_block_nonce(),
             });
         }
 
         if let Some(userState) = &mut optUserState {
             if userState.valueState == ValueState::Approved {
                 return sc_error!("user already registered");
+            }
+            if userState.address != self.get_caller() {
+                if self.get_block_nonce() - userState.nonce < self.getMaxNonceDiff() {
+                    return sc_error!("data already in processing for other user");
+                }
+            
+                userState.address = self.get_caller();
             }
     
             userState.attester = self.selectAttestator();

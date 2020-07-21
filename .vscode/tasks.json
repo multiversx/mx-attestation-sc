@@ -1,4 +1,27 @@
 {
     "version": "2.0.0",
-    "tasks": []
+    "tasks": [
+        {
+            "label": "digital-cash-debug-build",
+            "command": "cargo",
+            "args": [
+                "build"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}//digital-cash/debug"
+            },
+            "type": "shell"
+        },
+        {
+            "label": "mycontract-debug-build",
+            "command": "cargo",
+            "args": [
+                "build"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}//mycontract/debug"
+            },
+            "type": "shell"
+        }
+    ]
 }

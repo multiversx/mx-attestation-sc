@@ -68,7 +68,7 @@ impl Decode for ValueState {
 pub struct User {
     pub valueState:  ValueState,
     pub publicInfo:  H256,
-    pub privateInfo: H256,
+    pub privateInfo: Vec<u8>,
     pub address:     Address,
     pub attester:    Address,
     pub nonce:       u64,
@@ -91,7 +91,7 @@ impl Decode for User {
         Ok(User{
             valueState:  ValueState::dep_decode(input)?,
             publicInfo:  H256::dep_decode(input)?,
-            privateInfo: H256::dep_decode(input)?,
+            privateInfo: Vec::dep_decode(input)?,
             address:     Address::dep_decode(input)?,
             attester:    Address::dep_decode(input)?,
             nonce:       u64::dep_decode(input)?,

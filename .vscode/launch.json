@@ -1,4 +1,23 @@
 {
     "version": "0.2.0",
-    "configurations": []
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug digital-cash",
+            "preLaunchTask": "digital-cash-debug-build",
+            "program": "${workspaceFolder}//digital-cash/debug/target/debug/digital-cash-debug",
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug mycontract",
+            "preLaunchTask": "mycontract-debug-build",
+            "program": "${workspaceFolder}//mycontract/debug/target/debug/mycontract-debug",
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
 }

@@ -42,7 +42,7 @@ pub trait Attestation {
             optUserState = Some(User {
                 valueState:  ValueState::None,
                 publicInfo:  H256::zero(),
-                privateInfo: H256::zero(),
+                privateInfo: Vec::new(),
                 address:     self.get_caller(),
                 attester:    Address::zero(),
                 nonce:       self.get_block_nonce(),
@@ -85,9 +85,11 @@ pub trait Attestation {
             if userState.valueState == ValueState::Approved {
                 return sc_error!("user already registered");
             }
-    
             if userState.attester != self.get_caller() {
                 return sc_error!("not the selected attester");
+            }
+            if self.get_block_nonce() - userState.nonce < self.getMaxNonceDiff() {
+                return sc_error!("outside of grace period");
             }
     
             userState.publicInfo = publicInfo.clone();
@@ -104,7 +106,7 @@ pub trait Attestation {
     }
 
     #[endpoint]
-    fn attest(&self, obfuscatedData: &H256, privateInfo: &H256) -> Result<(), SCError> {
+    fn attest(&self, obfuscatedData: &H256, privateInfo: &Vec<u8>) -> Result<(), SCError> {
         let mut optUserState = self._get_user_state(obfuscatedData);
 
         if let Some(userState) = &mut optUserState {
@@ -115,9 +117,12 @@ pub trait Attestation {
                 return sc_error!("only user can attest");
             }
 
-            let hashed = self.keccak256(privateInfo.as_bytes());
+            let hashed = self.keccak256(privateInfo);
             if hashed != userState.publicInfo.as_bytes() {
                 return sc_error!("private/public info missmatch");
+            }
+            if self.get_block_nonce() - userState.nonce < self.getMaxNonceDiff() {
+                return sc_error!("outside of grace period");
             }
 
             userState.privateInfo = privateInfo.clone();  

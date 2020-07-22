@@ -1,0 +1,10 @@
+/home/robert/GolandProjects/sc-attestation-rs/target/rls/debug/deps/arrayvec-744a4223b9f8345a.rmeta: /home/robert/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/arrayvec-0.5.1/src/lib.rs /home/robert/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/arrayvec-0.5.1/src/maybe_uninit.rs /home/robert/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/arrayvec-0.5.1/src/array.rs /home/robert/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/arrayvec-0.5.1/src/array_string.rs /home/robert/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/arrayvec-0.5.1/src/char.rs /home/robert/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/arrayvec-0.5.1/src/errors.rs
+
+/home/robert/GolandProjects/sc-attestation-rs/target/rls/debug/deps/arrayvec-744a4223b9f8345a.d: /home/robert/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/arrayvec-0.5.1/src/lib.rs /home/robert/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/arrayvec-0.5.1/src/maybe_uninit.rs /home/robert/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/arrayvec-0.5.1/src/array.rs /home/robert/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/arrayvec-0.5.1/src/array_string.rs /home/robert/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/arrayvec-0.5.1/src/char.rs /home/robert/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/arrayvec-0.5.1/src/errors.rs
+
+/home/robert/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/arrayvec-0.5.1/src/lib.rs:
+/home/robert/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/arrayvec-0.5.1/src/maybe_uninit.rs:
+/home/robert/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/arrayvec-0.5.1/src/array.rs:
+/home/robert/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/arrayvec-0.5.1/src/array_string.rs:
+/home/robert/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/arrayvec-0.5.1/src/char.rs:
+/home/robert/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/arrayvec-0.5.1/src/errors.rs:

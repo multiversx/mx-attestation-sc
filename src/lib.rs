@@ -151,7 +151,7 @@ pub trait Attestation {
 
         let optUserState = self._get_user_state(address);
         if optUserState.is_some() {
-            
+            return sc_error!("user already exists");
         }
 
         self._set_attestator_state(address, &ValueState::Approved);
@@ -224,11 +224,24 @@ pub trait Attestation {
         }
     }
 
+    #[view(getPublicKey)]
+    fn getPublicKey(&self, obfuscatedData: &H256) -> Result<Address, SCError> {
+        let optUserState = self._get_user_state(obfuscatedData);
+        if let Some(userState) = optUserState {
+           if userState.valueState == ValueState::Approved {
+                return Ok(userState.address)
+           }
+           sc_error!("userData not yet attested")
+        } else {
+           sc_error!("no data for key")
+        }
+    }
+
     #[private]
     fn selectAttestator(&self) -> Address {
         let attestatorList = self._get_attestator_list();
         //TODO add random selection from length of list and the random number
-        return attestatorList[0].clone()
+        return attestatorList[attestatorList.len() - 1].clone()
     }
 
     // STORAGE

@@ -25,6 +25,11 @@ pub trait Attestation {
         Ok(())
     }
 
+    #[endpoint]
+    fn version(&self) -> &'static str {
+        env!("CARGO_PKG_VERSION")
+    }
+
     #[payable]
     #[endpoint]
     fn register(&self, obfuscatedData: &H256, #[payment] payment: BigUint) -> Result<(), SCError> {

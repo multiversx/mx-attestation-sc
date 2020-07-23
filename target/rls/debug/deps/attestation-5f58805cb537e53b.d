@@ -4,3 +4,5 @@
 
 src/lib.rs:
 src/user_state.rs:
+
+# env-dep:CARGO_PKG_VERSION=0.1.0

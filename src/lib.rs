@@ -93,7 +93,7 @@ pub trait Attestation {
             if userState.attester != self.get_caller() {
                 return sc_error!("not the selected attester");
             }
-            if self.get_block_nonce() - userState.nonce < self.getMaxNonceDiff() {
+            if self.get_block_nonce() - userState.nonce > self.getMaxNonceDiff() {
                 return sc_error!("outside of grace period");
             }
     
@@ -126,7 +126,7 @@ pub trait Attestation {
             if hashed != userState.publicInfo.as_bytes() {
                 return sc_error!("private/public info missmatch");
             }
-            if self.get_block_nonce() - userState.nonce < self.getMaxNonceDiff() {
+            if self.get_block_nonce() - userState.nonce > self.getMaxNonceDiff() {
                 return sc_error!("outside of grace period");
             }
 

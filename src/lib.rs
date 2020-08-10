@@ -37,13 +37,13 @@ pub trait Attestation {
             return sc_error!("should pay exactly the registration cost");
         }
 
+        let attestatorS = self._get_attestator_state(obfuscatedData);
+        if attestatorS.exists() {
+            return sc_error!("is not allowed to save under attestator key")
+        }
+
         let mut optUserState = self._get_user_state(obfuscatedData);
         if optUserState.is_none() {
-            let attestatorS = self._get_attestator_state(obfuscatedData);
-            if attestatorS.exists() {
-                return sc_error!("is not allowed to save under attestator key")
-            }
-
             optUserState = Some(User {
                 valueState:  ValueState::None,
                 publicInfo:  H256::zero(),
@@ -58,15 +58,20 @@ pub trait Attestation {
             if userState.valueState == ValueState::Approved {
                 return sc_error!("user already registered");
             }
-            if userState.address != self.get_caller() {
+
+            if userState.address == Address::zero() {
+                userState.address = self.get_caller();
+            } else if userState.address != self.get_caller() {
                 if self.get_block_nonce() - userState.nonce < self.getMaxNonceDiff() {
                     return sc_error!("data already in processing for other user");
                 }
             
                 userState.address = self.get_caller();
             }
-    
-            userState.attester = self.selectAttestator();
+            if userState.attester == Address::zero() {
+                userState.attester = self.selectAttestator();
+            }
+            
             userState.nonce = self.get_block_nonce();
             userState.valueState = ValueState::Requested;
     
@@ -86,11 +91,24 @@ pub trait Attestation {
         }
 
         let mut optUserState = self._get_user_state(obfuscatedData);
+        if optUserState.is_none() {
+            optUserState = Some(User {
+                valueState:  ValueState::None,
+                publicInfo:  H256::zero(),
+                privateInfo: Vec::new(),
+                address:     Address::zero(),
+                attester:    Address::zero(),
+                nonce:       self.get_block_nonce(),
+            });
+        }
+
         if let Some(userState) = &mut optUserState {
             if userState.valueState == ValueState::Approved {
                 return sc_error!("user already registered");
             }
-            if userState.attester != self.get_caller() {
+            if userState.address == Address::zero() {
+                userState.attester = self.get_caller();
+            } else if userState.attester != self.get_caller() {
                 return sc_error!("not the selected attester");
             }
             if self.get_block_nonce() - userState.nonce > self.getMaxNonceDiff() {
@@ -106,7 +124,7 @@ pub trait Attestation {
     
             return Ok(())
         } else {
-            return sc_error!("there is not registered user under key");
+            return sc_error!("impossible error");
         }
     }
 

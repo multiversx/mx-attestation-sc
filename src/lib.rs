@@ -73,7 +73,9 @@ pub trait Attestation {
             }
             
             userState.nonce = self.get_block_nonce();
-            userState.valueState = ValueState::Requested;
+            if userState.valueState != ValueState::Pending {
+                userState.valueState = ValueState::Requested;
+            }
     
             self._set_user_state(obfuscatedData, Some(userState.clone()));
     
@@ -232,7 +234,7 @@ pub trait Attestation {
             return sc_error!("only owner can claim");
         }
 
-        self.send_tx(&contract_owner, &self.get_sc_balance(), "dns claim");
+        self.send_tx(&contract_owner, &self.get_sc_balance(), "attestation claim");
 
         Ok(())
     }

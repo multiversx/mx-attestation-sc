@@ -42,14 +42,14 @@ pub trait Attestation {
 
         let mut opt_user_state = self.get_user_state(obfuscated_data);
         if opt_user_state.is_none() {
-            opt_user_state = Some(User {
+            opt_user_state = Some(Box::new(User {
                 value_state:  ValueState::None,
                 public_info:  H256::zero(),
                 private_info: Vec::new(),
                 address:     self.get_caller(),
                 attester:    Address::zero(),
                 nonce:       self.get_block_nonce(),
-            });
+            }));
         }
 
         if let Some(user_state) = &mut opt_user_state {
@@ -92,14 +92,14 @@ pub trait Attestation {
 
         let mut opt_user_state = self.get_user_state(obfuscated_data);
         if opt_user_state.is_none() {
-            opt_user_state = Some(User {
+            opt_user_state = Some(Box::new(User {
                 value_state:  ValueState::None,
                 public_info:  H256::zero(),
                 private_info: Vec::new(),
                 address:     Address::zero(),
                 attester:    Address::zero(),
                 nonce:       self.get_block_nonce(),
-            });
+            }));
         }
 
         if let Some(user_state) = &mut opt_user_state {
@@ -238,7 +238,7 @@ pub trait Attestation {
     }
 
     #[view(getUserData)]
-    fn get_user_data(&self, obfuscated_data: &H256) -> SCResult<User> {
+    fn get_user_data(&self, obfuscated_data: &H256) -> SCResult<Box<User>> {
         let opt_user_state = self.get_user_state(obfuscated_data);
         if let Some(user_state) = opt_user_state {
            Ok(user_state)
@@ -295,10 +295,10 @@ pub trait Attestation {
     fn set_attestator_list(&self, attestator_list: &Vec<Address>);
 
     #[storage_get("user")]
-    fn get_user_state(&self, obfuscated_data: &H256) -> Option<User>;
+    fn get_user_state(&self, obfuscated_data: &H256) -> Option<Box<User>>;
 
     #[storage_set("user")]
-    fn set_user_state(&self, obfuscated_data: &H256, user: Option<User>);
+    fn set_user_state(&self, obfuscated_data: &H256, user: Option<Box<User>>);
 
     // events
     #[event("0x0000000000000000000000000000000000000000000000000000000000000001")]

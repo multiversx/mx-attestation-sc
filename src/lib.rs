@@ -1,5 +1,4 @@
 #![no_std]
-#![no_main]
 
 mod user;
 mod value_state;

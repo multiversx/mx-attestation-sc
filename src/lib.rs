@@ -31,14 +31,10 @@ pub trait Attestation {
     #[payable]
     #[endpoint]
     fn register(&self, obfuscated_data: &H256, #[payment] payment: BigUint) -> SCResult<()> {
-        if payment != self.get_registraction_cost() {
-            return sc_error!("should pay exactly the registration cost");
-        }
+        require!(payment == self.get_registraction_cost(), "should pay exactly the registration cost");
 
         let attestator_s = self.get_attestator_state(obfuscated_data);
-        if attestator_s.exists() {
-            return sc_error!("is not allowed to save under attestator key")
-        }
+        require!(!attestator_s.exists(), "is not allowed to save under attestator key");
 
         let mut opt_user_state = self.get_user_state(obfuscated_data);
         if opt_user_state.is_none() {
@@ -53,16 +49,13 @@ pub trait Attestation {
         }
 
         if let Some(user_state) = &mut opt_user_state {
-            if user_state.value_state == ValueState::Approved {
-                return sc_error!("user already registered");
-            }
+            require!(user_state.value_state != ValueState::Approved , "user already registered");
 
             if user_state.address == Address::zero() {
                 user_state.address = self.get_caller();
             } else if user_state.address != self.get_caller() {
-                if self.get_block_nonce() - user_state.nonce < self.get_max_nonce_diff() {
-                    return sc_error!("data already in processing for other user");
-                }
+                require!(self.get_block_nonce() - user_state.nonce >= self.get_max_nonce_diff(), 
+                    "data already in processing for other user");
             
                 user_state.address = self.get_caller();
             }
@@ -86,9 +79,7 @@ pub trait Attestation {
     #[endpoint(savePublicInfo)]
     fn save_public_info(&self, obfuscated_data: &H256, public_info: &H256) -> SCResult<()> {
         let attestator_s = self.get_attestator_state(&self.get_caller());
-        if !attestator_s.exists() {
-            return sc_error!("caller is not an attestator");
-        }
+        require!(attestator_s.exists() , "caller is not an attestator");
 
         let mut opt_user_state = self.get_user_state(obfuscated_data);
         if opt_user_state.is_none() {
@@ -103,17 +94,15 @@ pub trait Attestation {
         }
 
         if let Some(user_state) = &mut opt_user_state {
-            if user_state.value_state == ValueState::Approved {
-                return sc_error!("user already registered");
-            }
+            require!(user_state.value_state != ValueState::Approved, "user already registered");
+
             if user_state.address == Address::zero() {
                 user_state.attester = self.get_caller();
             } else if user_state.attester != self.get_caller() {
                 return sc_error!("not the selected attester");
             }
-            if self.get_block_nonce() - user_state.nonce > self.get_max_nonce_diff() {
-                return sc_error!("outside of grace period");
-            }
+            require!(self.get_block_nonce() - user_state.nonce <= self.get_max_nonce_diff(),
+                "outside of grace period");
     
             user_state.public_info = public_info.clone();
             user_state.nonce = self.get_block_nonce();
@@ -133,20 +122,15 @@ pub trait Attestation {
         let mut opt_user_state = self.get_user_state(obfuscated_data);
 
         if let Some(user_state) = &mut opt_user_state {
-            if user_state.value_state != ValueState::Pending {
-                return sc_error!("user already registered");
-            }
-            if user_state.address != self.get_caller() {
-                return sc_error!("only user can attest");
-            }
+            require!(user_state.value_state == ValueState::Pending, "user already registered");
+
+            require!(user_state.address == self.get_caller() , "only user can attest");
 
             let hashed = self.keccak256(private_info);
-            if hashed != user_state.public_info {
-                return sc_error!("private/public info missmatch");
-            }
-            if self.get_block_nonce() - user_state.nonce > self.get_max_nonce_diff() {
-                return sc_error!("outside of grace period");
-            }
+            require!(hashed == user_state.public_info, "private/public info mismatch");
+
+            require!(self.get_block_nonce() - user_state.nonce <= self.get_max_nonce_diff(),
+                "outside of grace period");
 
             user_state.private_info = private_info.clone();  
             user_state.value_state = ValueState::Approved;
@@ -162,20 +146,13 @@ pub trait Attestation {
 
     #[endpoint(addAttestator)]
     fn add_attestator(&self, address: &Address) -> SCResult<()> {
-        let contract_owner = self.get_owner_address();
-        if &self.get_caller() != &contract_owner {
-            return sc_error!("only owner can add attestator");
-        }
+        only_owner!(self, "only owner can add attestator");
 
         let attestator_s = self.get_attestator_state(address);
-        if attestator_s.exists() {
-            return sc_error!("attestator already exists");
-        }
+        require!(!attestator_s.exists(), "attestator already exists");
 
         let opt_user_state = self.get_user_state(address);
-        if opt_user_state.is_some() {
-            return sc_error!("user already exists");
-        }
+        require!(opt_user_state.is_none(), "user already exists");
 
         self.set_attestator_state(address, &ValueState::Approved);
         
@@ -189,10 +166,7 @@ pub trait Attestation {
 
     #[endpoint(setRegisterCost)]
     fn set_register_cost(&self, registration_cost: &BigUint) -> SCResult<()> {
-        let contract_owner = self.get_owner_address();
-        if &self.get_caller() != &contract_owner {
-            return sc_error!("only owner can add attestator");
-        }
+        only_owner!(self, "only owner can set registraction cost");
         
         self.set_registration_cost(registration_cost);
         Ok(())
@@ -200,24 +174,17 @@ pub trait Attestation {
 
     #[endpoint(removeAttestator)]
     fn remove_attestator(&self, address: &Address) -> SCResult<()> {
-        let contract_owner = self.get_owner_address();
-        if &self.get_caller() != &contract_owner {
-            return sc_error!("only owner can add attestator");
-        }
+        only_owner!(self, "only owner can remove attestator");
 
         let attestator_s = self.get_attestator_state(address);
-        if !attestator_s.exists() {
-            return sc_error!("attestator does not exists");
-        }
+        require!(attestator_s.exists(), "attestator does not exists");
         
         let mut attestator_list = self.get_attestator_list();
         if let Some(pos) = attestator_list.iter().position(|x| *x == address.clone()) {
             attestator_list.remove(pos);
         }
 
-        if attestator_list.len() == 0 {
-            return sc_error!("cannot delete last attestator");
-        }
+        require!(!attestator_list.is_empty(), "cannot delete last attestator");
 
         self.set_attestator_list(&attestator_list);
         self.set_attestator_state(address, &ValueState::None);
@@ -227,11 +194,9 @@ pub trait Attestation {
 
     #[endpoint]
     fn claim(&self) -> SCResult<()>  {
-        let contract_owner = self.get_owner_address();
-        if &self.get_caller() != &contract_owner {
-            return sc_error!("only owner can claim");
-        }
+        only_owner!(self, "only owner can claim");
 
+        let contract_owner = self.get_owner_address();
         self.send_tx(&contract_owner, &self.get_sc_balance(), "attestation claim");
 
         Ok(())
@@ -243,7 +208,7 @@ pub trait Attestation {
         if let Some(user_state) = opt_user_state {
            Ok(user_state)
         } else {
-           sc_error!("not data for key")
+           sc_error!("no data for key")
         }
     }
 

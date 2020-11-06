@@ -1,1 +1,0 @@
-/home/robert/GolandProjects/sc-attestation-rs/target/wasm32-unknown-unknown/release/libattestation.rlib: /home/robert/GolandProjects/sc-attestation-rs/src/lib.rs /home/robert/GolandProjects/sc-attestation-rs/src/user_state.rs

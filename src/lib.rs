@@ -1,4 +1,5 @@
 #![no_std]
+#![allow(clippy::string_lit_as_bytes)]
 
 mod user;
 mod value_state;
@@ -18,7 +19,7 @@ pub trait Attestation {
 		let mut attestator_list: Vec<Address> = Vec::new();
 		attestator_list.push(address.clone());
 
-		self.set_attestator_list(&attestator_list);
+		self.set_attestator_list(&attestator_list[..]);
 		self.set_max_nonce_diff(max_nonce_diff);
 	}
 
@@ -80,7 +81,7 @@ pub trait Attestation {
 
 			self.set_user_state(obfuscated_data, Some(user_state.clone()));
 
-			return Ok(());
+			Ok(())
 		} else {
 			return sc_error!("impossible error");
 		}
@@ -126,14 +127,14 @@ pub trait Attestation {
 			self.set_user_state(obfuscated_data, Some(user_state.clone()));
 			self.save_public_info_event(&user_state.address, obfuscated_data, public_info);
 
-			return Ok(());
+			Ok(())
 		} else {
 			return sc_error!("impossible error");
 		}
 	}
 
 	#[endpoint]
-	fn attest(&self, obfuscated_data: &H256, private_info: &Vec<u8>) -> SCResult<()> {
+	fn attest(&self, obfuscated_data: &H256, private_info: Vec<u8>) -> SCResult<()> {
 		let mut opt_user_state = self.get_user_state(obfuscated_data);
 
 		if let Some(user_state) = &mut opt_user_state {
@@ -147,7 +148,7 @@ pub trait Attestation {
 				"only user can attest"
 			);
 
-			let hashed = self.keccak256(private_info);
+			let hashed = self.keccak256(&private_info);
 			require!(
 				hashed == user_state.public_info,
 				"private/public info mismatch"
@@ -158,13 +159,13 @@ pub trait Attestation {
 				"outside of grace period"
 			);
 
-			user_state.private_info = private_info.clone();
+			user_state.private_info = private_info;
 			user_state.value_state = ValueState::Approved;
 			self.set_user_state(obfuscated_data, Some(user_state.clone()));
 
 			self.attestation_ok_event(&self.get_caller(), obfuscated_data);
 
-			return Ok(());
+			Ok(())
 		} else {
 			return sc_error!("there is not registered user under key");
 		}
@@ -185,7 +186,7 @@ pub trait Attestation {
 		let mut attestator_list = self.get_attestator_list();
 		attestator_list.push(address.clone());
 
-		self.set_attestator_list(&attestator_list);
+		self.set_attestator_list(&attestator_list[..]);
 
 		Ok(())
 	}
@@ -212,7 +213,7 @@ pub trait Attestation {
 
 		require!(!attestator_list.is_empty(), "cannot delete last attestator");
 
-		self.set_attestator_list(&attestator_list);
+		self.set_attestator_list(&attestator_list[..]);
 		self.set_attestator_state(address, &ValueState::None);
 
 		Ok(())
@@ -254,7 +255,7 @@ pub trait Attestation {
 	fn select_attestator(&self) -> Address {
 		let attestator_list = self.get_attestator_list();
 		//TODO add random selection from length of list and the random number
-		return attestator_list[attestator_list.len() - 1].clone();
+		attestator_list[attestator_list.len() - 1].clone()
 	}
 
 	// STORAGE
@@ -283,7 +284,7 @@ pub trait Attestation {
 	fn get_attestator_list(&self) -> Vec<Address>;
 
 	#[storage_set("attestator_list")]
-	fn set_attestator_list(&self, attestator_list: &Vec<Address>);
+	fn set_attestator_list(&self, attestator_list: &[Address]);
 
 	#[storage_get("user")]
 	fn get_user_state(&self, obfuscated_data: &H256) -> Option<Box<User>>;

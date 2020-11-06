@@ -23,6 +23,7 @@ impl NestedEncode for User {
 		Ok(())
 	}
 
+	#[allow(clippy::redundant_clone)]
 	fn dep_encode_or_exit<O: NestedEncodeOutput, ExitCtx: Clone>(
 		&self,
 		dest: &mut O,
@@ -67,6 +68,7 @@ impl NestedDecode for User {
 		})
 	}
 
+    #[allow(clippy::redundant_clone)]
 	fn dep_decode_or_exit<I: NestedDecodeInput, ExitCtx: Clone>(
 		input: &mut I,
 		c: ExitCtx,

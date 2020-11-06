@@ -8,270 +8,296 @@ use value_state::ValueState;
 
 imports!();
 
-
 #[elrond_wasm_derive::contract(AttestationImpl)]
 pub trait Attestation {
-    #[init]
-    fn init(&self, registration_cost: &BigUint, address: &Address, max_nonce_diff: u64) {
-        self.set_registration_cost(registration_cost);
-        self.set_attestator_state(address, &ValueState::Approved);
-        
-        let mut attestator_list: Vec<Address> = Vec::new();
-        attestator_list.push(address.clone());
+	#[init]
+	fn init(&self, registration_cost: &BigUint, address: &Address, max_nonce_diff: u64) {
+		self.set_registration_cost(registration_cost);
+		self.set_attestator_state(address, &ValueState::Approved);
 
-        self.set_attestator_list(&attestator_list);
-        self.set_max_nonce_diff(max_nonce_diff);
-    }
+		let mut attestator_list: Vec<Address> = Vec::new();
+		attestator_list.push(address.clone());
 
-    #[endpoint]
-    fn version(&self) -> &'static str {
-        env!("CARGO_PKG_VERSION")
-    }
+		self.set_attestator_list(&attestator_list);
+		self.set_max_nonce_diff(max_nonce_diff);
+	}
 
-    #[payable]
-    #[endpoint]
-    fn register(&self, obfuscated_data: &H256, #[payment] payment: BigUint) -> SCResult<()> {
-        require!(payment == self.get_registraction_cost(), "should pay exactly the registration cost");
+	#[endpoint]
+	fn version(&self) -> &'static str {
+		env!("CARGO_PKG_VERSION")
+	}
 
-        let attestator_s = self.get_attestator_state(obfuscated_data);
-        require!(!attestator_s.exists(), "is not allowed to save under attestator key");
+	#[payable]
+	#[endpoint]
+	fn register(&self, obfuscated_data: &H256, #[payment] payment: BigUint) -> SCResult<()> {
+		require!(
+			payment == self.get_registraction_cost(),
+			"should pay exactly the registration cost"
+		);
 
-        let mut opt_user_state = self.get_user_state(obfuscated_data);
-        if opt_user_state.is_none() {
-            opt_user_state = Some(Box::new(User {
-                value_state:  ValueState::None,
-                public_info:  H256::zero(),
-                private_info: Vec::new(),
-                address:     self.get_caller(),
-                attester:    Address::zero(),
-                nonce:       self.get_block_nonce(),
-            }));
-        }
+		let attestator_s = self.get_attestator_state(obfuscated_data);
+		require!(
+			!attestator_s.exists(),
+			"is not allowed to save under attestator key"
+		);
 
-        if let Some(user_state) = &mut opt_user_state {
-            require!(user_state.value_state != ValueState::Approved , "user already registered");
+		let mut opt_user_state = self.get_user_state(obfuscated_data);
+		if opt_user_state.is_none() {
+			opt_user_state = Some(Box::new(User {
+				value_state: ValueState::None,
+				public_info: H256::zero(),
+				private_info: Vec::new(),
+				address: self.get_caller(),
+				attester: Address::zero(),
+				nonce: self.get_block_nonce(),
+			}));
+		}
 
-            if user_state.address == Address::zero() {
-                user_state.address = self.get_caller();
-            } else if user_state.address != self.get_caller() {
-                require!(self.get_block_nonce() - user_state.nonce >= self.get_max_nonce_diff(), 
-                    "data already in processing for other user");
-            
-                user_state.address = self.get_caller();
-            }
-            if user_state.attester == Address::zero() {
-                user_state.attester = self.select_attestator();
-            }
-            
-            user_state.nonce = self.get_block_nonce();
-            if user_state.value_state != ValueState::Pending {
-                user_state.value_state = ValueState::Requested;
-            }
-    
-            self.set_user_state(obfuscated_data, Some(user_state.clone()));
-    
-            return Ok(())
-        } else {
-            return sc_error!("impossible error")
-        }
-    }
+		if let Some(user_state) = &mut opt_user_state {
+			require!(
+				user_state.value_state != ValueState::Approved,
+				"user already registered"
+			);
 
-    #[endpoint(savePublicInfo)]
-    fn save_public_info(&self, obfuscated_data: &H256, public_info: &H256) -> SCResult<()> {
-        let attestator_s = self.get_attestator_state(&self.get_caller());
-        require!(attestator_s.exists() , "caller is not an attestator");
+			if user_state.address == Address::zero() {
+				user_state.address = self.get_caller();
+			} else if user_state.address != self.get_caller() {
+				require!(
+					self.get_block_nonce() - user_state.nonce >= self.get_max_nonce_diff(),
+					"data already in processing for other user"
+				);
 
-        let mut opt_user_state = self.get_user_state(obfuscated_data);
-        if opt_user_state.is_none() {
-            opt_user_state = Some(Box::new(User {
-                value_state:  ValueState::None,
-                public_info:  H256::zero(),
-                private_info: Vec::new(),
-                address:     Address::zero(),
-                attester:    Address::zero(),
-                nonce:       self.get_block_nonce(),
-            }));
-        }
+				user_state.address = self.get_caller();
+			}
+			if user_state.attester == Address::zero() {
+				user_state.attester = self.select_attestator();
+			}
 
-        if let Some(user_state) = &mut opt_user_state {
-            require!(user_state.value_state != ValueState::Approved, "user already registered");
+			user_state.nonce = self.get_block_nonce();
+			if user_state.value_state != ValueState::Pending {
+				user_state.value_state = ValueState::Requested;
+			}
 
-            if user_state.address == Address::zero() {
-                user_state.attester = self.get_caller();
-            } else if user_state.attester != self.get_caller() {
-                return sc_error!("not the selected attester");
-            }
-            require!(self.get_block_nonce() - user_state.nonce <= self.get_max_nonce_diff(),
-                "outside of grace period");
-    
-            user_state.public_info = public_info.clone();
-            user_state.nonce = self.get_block_nonce();
-            user_state.value_state = ValueState::Pending;
-    
-            self.set_user_state(obfuscated_data, Some(user_state.clone()));
-            self.save_public_info_event(&user_state.address, obfuscated_data, public_info);
-    
-            return Ok(())
-        } else {
-            return sc_error!("impossible error");
-        }
-    }
+			self.set_user_state(obfuscated_data, Some(user_state.clone()));
 
-    #[endpoint]
-    fn attest(&self, obfuscated_data: &H256, private_info: &Vec<u8>) -> SCResult<()> {
-        let mut opt_user_state = self.get_user_state(obfuscated_data);
+			return Ok(());
+		} else {
+			return sc_error!("impossible error");
+		}
+	}
 
-        if let Some(user_state) = &mut opt_user_state {
-            require!(user_state.value_state == ValueState::Pending, "user already registered");
+	#[endpoint(savePublicInfo)]
+	fn save_public_info(&self, obfuscated_data: &H256, public_info: &H256) -> SCResult<()> {
+		let attestator_s = self.get_attestator_state(&self.get_caller());
+		require!(attestator_s.exists(), "caller is not an attestator");
 
-            require!(user_state.address == self.get_caller() , "only user can attest");
+		let mut opt_user_state = self.get_user_state(obfuscated_data);
+		if opt_user_state.is_none() {
+			opt_user_state = Some(Box::new(User {
+				value_state: ValueState::None,
+				public_info: H256::zero(),
+				private_info: Vec::new(),
+				address: Address::zero(),
+				attester: Address::zero(),
+				nonce: self.get_block_nonce(),
+			}));
+		}
 
-            let hashed = self.keccak256(private_info);
-            require!(hashed == user_state.public_info, "private/public info mismatch");
+		if let Some(user_state) = &mut opt_user_state {
+			require!(
+				user_state.value_state != ValueState::Approved,
+				"user already registered"
+			);
 
-            require!(self.get_block_nonce() - user_state.nonce <= self.get_max_nonce_diff(),
-                "outside of grace period");
+			if user_state.address == Address::zero() {
+				user_state.attester = self.get_caller();
+			} else if user_state.attester != self.get_caller() {
+				return sc_error!("not the selected attester");
+			}
+			require!(
+				self.get_block_nonce() - user_state.nonce <= self.get_max_nonce_diff(),
+				"outside of grace period"
+			);
 
-            user_state.private_info = private_info.clone();  
-            user_state.value_state = ValueState::Approved;
-            self.set_user_state(obfuscated_data, Some(user_state.clone()));
+			user_state.public_info = public_info.clone();
+			user_state.nonce = self.get_block_nonce();
+			user_state.value_state = ValueState::Pending;
 
-            self.attestation_ok_event(&self.get_caller(), obfuscated_data);
+			self.set_user_state(obfuscated_data, Some(user_state.clone()));
+			self.save_public_info_event(&user_state.address, obfuscated_data, public_info);
 
-            return Ok(())
-        } else {
-            return sc_error!("there is not registered user under key");
-        }         
-    }
+			return Ok(());
+		} else {
+			return sc_error!("impossible error");
+		}
+	}
 
-    #[endpoint(addAttestator)]
-    fn add_attestator(&self, address: &Address) -> SCResult<()> {
-        only_owner!(self, "only owner can add attestator");
+	#[endpoint]
+	fn attest(&self, obfuscated_data: &H256, private_info: &Vec<u8>) -> SCResult<()> {
+		let mut opt_user_state = self.get_user_state(obfuscated_data);
 
-        let attestator_s = self.get_attestator_state(address);
-        require!(!attestator_s.exists(), "attestator already exists");
+		if let Some(user_state) = &mut opt_user_state {
+			require!(
+				user_state.value_state == ValueState::Pending,
+				"user already registered"
+			);
 
-        let opt_user_state = self.get_user_state(address);
-        require!(opt_user_state.is_none(), "user already exists");
+			require!(
+				user_state.address == self.get_caller(),
+				"only user can attest"
+			);
 
-        self.set_attestator_state(address, &ValueState::Approved);
-        
-        let mut attestator_list = self.get_attestator_list();
-        attestator_list.push(address.clone());
+			let hashed = self.keccak256(private_info);
+			require!(
+				hashed == user_state.public_info,
+				"private/public info mismatch"
+			);
 
-        self.set_attestator_list(&attestator_list);
+			require!(
+				self.get_block_nonce() - user_state.nonce <= self.get_max_nonce_diff(),
+				"outside of grace period"
+			);
 
-        Ok(())
-    }
+			user_state.private_info = private_info.clone();
+			user_state.value_state = ValueState::Approved;
+			self.set_user_state(obfuscated_data, Some(user_state.clone()));
 
-    #[endpoint(setRegisterCost)]
-    fn set_register_cost(&self, registration_cost: &BigUint) -> SCResult<()> {
-        only_owner!(self, "only owner can set registraction cost");
-        
-        self.set_registration_cost(registration_cost);
-        Ok(())
-    }
+			self.attestation_ok_event(&self.get_caller(), obfuscated_data);
 
-    #[endpoint(removeAttestator)]
-    fn remove_attestator(&self, address: &Address) -> SCResult<()> {
-        only_owner!(self, "only owner can remove attestator");
+			return Ok(());
+		} else {
+			return sc_error!("there is not registered user under key");
+		}
+	}
 
-        let attestator_s = self.get_attestator_state(address);
-        require!(attestator_s.exists(), "attestator does not exists");
-        
-        let mut attestator_list = self.get_attestator_list();
-        if let Some(pos) = attestator_list.iter().position(|x| *x == address.clone()) {
-            attestator_list.remove(pos);
-        }
+	#[endpoint(addAttestator)]
+	fn add_attestator(&self, address: &Address) -> SCResult<()> {
+		only_owner!(self, "only owner can add attestator");
 
-        require!(!attestator_list.is_empty(), "cannot delete last attestator");
+		let attestator_s = self.get_attestator_state(address);
+		require!(!attestator_s.exists(), "attestator already exists");
 
-        self.set_attestator_list(&attestator_list);
-        self.set_attestator_state(address, &ValueState::None);
+		let opt_user_state = self.get_user_state(address);
+		require!(opt_user_state.is_none(), "user already exists");
 
-        Ok(())
-    }
+		self.set_attestator_state(address, &ValueState::Approved);
 
-    #[endpoint]
-    fn claim(&self) -> SCResult<()>  {
-        only_owner!(self, "only owner can claim");
+		let mut attestator_list = self.get_attestator_list();
+		attestator_list.push(address.clone());
 
-        let contract_owner = self.get_owner_address();
-        self.send_tx(&contract_owner, &self.get_sc_balance(), "attestation claim");
+		self.set_attestator_list(&attestator_list);
 
-        Ok(())
-    }
+		Ok(())
+	}
 
-    #[view(getUserData)]
-    fn get_user_data(&self, obfuscated_data: &H256) -> SCResult<Box<User>> {
-        let opt_user_state = self.get_user_state(obfuscated_data);
-        if let Some(user_state) = opt_user_state {
-           Ok(user_state)
-        } else {
-           sc_error!("no data for key")
-        }
-    }
+	#[endpoint(setRegisterCost)]
+	fn set_register_cost(&self, registration_cost: &BigUint) -> SCResult<()> {
+		only_owner!(self, "only owner can set registraction cost");
 
-    #[view(getPublicKey)]
-    fn get_public_key(&self, obfuscated_data: &H256) -> SCResult<Address> {
-        let opt_user_state = self.get_user_state(obfuscated_data);
-        if let Some(user_state) = opt_user_state {
-           if user_state.value_state == ValueState::Approved {
-                return Ok(user_state.address)
-           }
-           sc_error!("userData not yet attested")
-        } else {
-           sc_error!("no data for key")
-        }
-    }
+		self.set_registration_cost(registration_cost);
+		Ok(())
+	}
 
-    fn select_attestator(&self) -> Address {
-        let attestator_list = self.get_attestator_list();
-        //TODO add random selection from length of list and the random number
-        return attestator_list[attestator_list.len() - 1].clone()
-    }
+	#[endpoint(removeAttestator)]
+	fn remove_attestator(&self, address: &Address) -> SCResult<()> {
+		only_owner!(self, "only owner can remove attestator");
 
-    // STORAGE
+		let attestator_s = self.get_attestator_state(address);
+		require!(attestator_s.exists(), "attestator does not exists");
 
-    #[view(getRegistrationCost)]
-    #[storage_get("registration_cost")]
-    fn get_registraction_cost(&self) -> BigUint;
+		let mut attestator_list = self.get_attestator_list();
+		if let Some(pos) = attestator_list.iter().position(|x| *x == address.clone()) {
+			attestator_list.remove(pos);
+		}
 
-    #[storage_set("registration_cost")]
-    fn set_registration_cost(&self, registration_cost: &BigUint);
+		require!(!attestator_list.is_empty(), "cannot delete last attestator");
 
-    #[view(getMaxNonceDiff)]
-    #[storage_get("max_nonce_diff")]
-    fn get_max_nonce_diff(&self) -> u64;
+		self.set_attestator_list(&attestator_list);
+		self.set_attestator_state(address, &ValueState::None);
 
-    #[storage_set("max_nonce_diff")]
-    fn set_max_nonce_diff(&self, max_nonce_diff: u64);
+		Ok(())
+	}
 
-    #[storage_get("attestator")]
-    fn get_attestator_state(&self, address: &Address) -> ValueState;
+	#[endpoint]
+	fn claim(&self) -> SCResult<()> {
+		only_owner!(self, "only owner can claim");
 
-    #[storage_set("attestator")]
-    fn set_attestator_state(&self, address: &Address, value_state: &ValueState);
+		let contract_owner = self.get_owner_address();
+		self.send_tx(&contract_owner, &self.get_sc_balance(), "attestation claim");
 
-    #[storage_get("attestator_list")]
-    fn get_attestator_list(&self) -> Vec<Address>;
+		Ok(())
+	}
 
-    #[storage_set("attestator_list")]
-    fn set_attestator_list(&self, attestator_list: &Vec<Address>);
+	#[view(getUserData)]
+	fn get_user_data(&self, obfuscated_data: &H256) -> SCResult<Box<User>> {
+		let opt_user_state = self.get_user_state(obfuscated_data);
+		if let Some(user_state) = opt_user_state {
+			Ok(user_state)
+		} else {
+			sc_error!("no data for key")
+		}
+	}
 
-    #[storage_get("user")]
-    fn get_user_state(&self, obfuscated_data: &H256) -> Option<Box<User>>;
+	#[view(getPublicKey)]
+	fn get_public_key(&self, obfuscated_data: &H256) -> SCResult<Address> {
+		let opt_user_state = self.get_user_state(obfuscated_data);
+		if let Some(user_state) = opt_user_state {
+			if user_state.value_state == ValueState::Approved {
+				return Ok(user_state.address);
+			}
+			sc_error!("userData not yet attested")
+		} else {
+			sc_error!("no data for key")
+		}
+	}
 
-    #[storage_set("user")]
-    fn set_user_state(&self, obfuscated_data: &H256, user: Option<Box<User>>);
+	fn select_attestator(&self) -> Address {
+		let attestator_list = self.get_attestator_list();
+		//TODO add random selection from length of list and the random number
+		return attestator_list[attestator_list.len() - 1].clone();
+	}
 
-    // events
-    #[event("0x0000000000000000000000000000000000000000000000000000000000000001")]
-    fn register_event(&self, user: &Address, obfuscated_data: &H256, attester: &Address);
+	// STORAGE
 
-    #[event("0x0000000000000000000000000000000000000000000000000000000000000002")]
-    fn save_public_info_event(&self, user: &Address, obfuscated_data: &H256, public_data: &H256);
+	#[view(getRegistrationCost)]
+	#[storage_get("registration_cost")]
+	fn get_registraction_cost(&self) -> BigUint;
 
-    #[event("0x0000000000000000000000000000000000000000000000000000000000000003")]
-    fn attestation_ok_event(&self, user: &Address, obfuscated_data: &H256);
+	#[storage_set("registration_cost")]
+	fn set_registration_cost(&self, registration_cost: &BigUint);
+
+	#[view(getMaxNonceDiff)]
+	#[storage_get("max_nonce_diff")]
+	fn get_max_nonce_diff(&self) -> u64;
+
+	#[storage_set("max_nonce_diff")]
+	fn set_max_nonce_diff(&self, max_nonce_diff: u64);
+
+	#[storage_get("attestator")]
+	fn get_attestator_state(&self, address: &Address) -> ValueState;
+
+	#[storage_set("attestator")]
+	fn set_attestator_state(&self, address: &Address, value_state: &ValueState);
+
+	#[storage_get("attestator_list")]
+	fn get_attestator_list(&self) -> Vec<Address>;
+
+	#[storage_set("attestator_list")]
+	fn set_attestator_list(&self, attestator_list: &Vec<Address>);
+
+	#[storage_get("user")]
+	fn get_user_state(&self, obfuscated_data: &H256) -> Option<Box<User>>;
+
+	#[storage_set("user")]
+	fn set_user_state(&self, obfuscated_data: &H256, user: Option<Box<User>>);
+
+	// events
+	#[event("0x0000000000000000000000000000000000000000000000000000000000000001")]
+	fn register_event(&self, user: &Address, obfuscated_data: &H256, attester: &Address);
+
+	#[event("0x0000000000000000000000000000000000000000000000000000000000000002")]
+	fn save_public_info_event(&self, user: &Address, obfuscated_data: &H256, public_data: &H256);
+
+	#[event("0x0000000000000000000000000000000000000000000000000000000000000003")]
+	fn attestation_ok_event(&self, user: &Address, obfuscated_data: &H256);
 }

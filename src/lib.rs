@@ -32,7 +32,7 @@ pub trait Attestation {
 	#[endpoint]
 	fn register(&self, obfuscated_data: &H256, #[payment] payment: BigUint) -> SCResult<()> {
 		require!(
-			payment == self.get_registraction_cost(),
+			payment == self.get_registration_cost(),
 			"should pay exactly the registration cost"
 		);
 
@@ -258,7 +258,7 @@ pub trait Attestation {
 
 	#[view(getRegistrationCost)]
 	#[storage_get("registration_cost")]
-	fn get_registraction_cost(&self) -> BigUint;
+	fn get_registration_cost(&self) -> BigUint;
 
 	#[storage_set("registration_cost")]
 	fn set_registration_cost(&self, registration_cost: &BigUint);

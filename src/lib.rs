@@ -289,7 +289,7 @@ pub trait Attestation {
 	fn get_user_state(&self, obfuscated_data: &H256) -> Box<User>;
 
 	#[storage_set("user")]
-	fn set_user_state(&self, obfuscated_data: &H256, user: &Box<User>);
+	fn set_user_state(&self, obfuscated_data: &H256, user: &User);
 
 	// events
 	#[event("0x0000000000000000000000000000000000000000000000000000000000000001")]

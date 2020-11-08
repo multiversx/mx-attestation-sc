@@ -8,7 +8,7 @@ crate-type = ["cdylib"]
 
 [profile.release]
 codegen-units = 1
-opt-level = "s"
+opt-level = "z"
 lto = true
 debug = false
 panic = "abort"

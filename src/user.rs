@@ -68,7 +68,7 @@ impl NestedDecode for User {
 		})
 	}
 
-    #[allow(clippy::redundant_clone)]
+	#[allow(clippy::redundant_clone)]
 	fn dep_decode_or_exit<I: NestedDecodeInput, ExitCtx: Clone>(
 		input: &mut I,
 		c: ExitCtx,

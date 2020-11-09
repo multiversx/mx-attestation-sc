@@ -103,11 +103,6 @@ pub trait Attestation {
 		user_state.value_state = ValueState::Pending;
 
 		self.set_user_state(obfuscated_data, &user_state);
-		self.save_public_info_event(
-			&user_state.address,
-			obfuscated_data,
-			&user_state.public_info,
-		);
 
 		Ok(())
 	}
@@ -146,8 +141,6 @@ pub trait Attestation {
 		user_state.private_info = private_info;
 		user_state.value_state = ValueState::Approved;
 		self.set_user_state(obfuscated_data, &user_state);
-
-		self.attestation_ok_event(&caller, obfuscated_data);
 
 		Ok(())
 	}
@@ -294,14 +287,4 @@ pub trait Attestation {
 
 	#[storage_set("user")]
 	fn set_user_state(&self, obfuscated_data: &H256, user: &User);
-
-	// events
-	#[event("0x0000000000000000000000000000000000000000000000000000000000000001")]
-	fn register_event(&self, user: &Address, obfuscated_data: &H256, attester: &Address);
-
-	#[event("0x0000000000000000000000000000000000000000000000000000000000000002")]
-	fn save_public_info_event(&self, user: &Address, obfuscated_data: &H256, public_data: &H256);
-
-	#[event("0x0000000000000000000000000000000000000000000000000000000000000003")]
-	fn attestation_ok_event(&self, user: &Address, obfuscated_data: &H256);
 }

@@ -1,12 +1,12 @@
 use super::ValueState;
 use elrond_wasm::elrond_codec::*;
-use elrond_wasm::{Address, Vec, H256};
+use elrond_wasm::{Address, BoxedBytes, H256};
 
 #[derive(Clone)]
 pub struct User {
 	pub value_state: ValueState,
 	pub public_info: H256,
-	pub private_info: Vec<u8>,
+	pub private_info: BoxedBytes,
 	pub address: Address,
 	pub attester: Address,
 	pub nonce: u64,
@@ -61,7 +61,7 @@ impl NestedDecode for User {
 		Ok(User {
 			value_state: ValueState::dep_decode(input)?,
 			public_info: H256::dep_decode(input)?,
-			private_info: Vec::dep_decode(input)?,
+			private_info: BoxedBytes::dep_decode(input)?,
 			address: Address::dep_decode(input)?,
 			attester: Address::dep_decode(input)?,
 			nonce: u64::dep_decode(input)?,
@@ -77,7 +77,7 @@ impl NestedDecode for User {
 		User {
 			value_state: ValueState::dep_decode_or_exit(input, c.clone(), exit),
 			public_info: H256::dep_decode_or_exit(input, c.clone(), exit),
-			private_info: Vec::<u8>::dep_decode_or_exit(input, c.clone(), exit),
+			private_info: BoxedBytes::dep_decode_or_exit(input, c.clone(), exit),
 			address: Address::dep_decode_or_exit(input, c.clone(), exit),
 			attester: Address::dep_decode_or_exit(input, c.clone(), exit),
 			nonce: u64::dep_decode_or_exit(input, c.clone(), exit),

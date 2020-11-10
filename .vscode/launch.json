@@ -2,22 +2,11 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "type": "lldb",
             "request": "launch",
-            "name": "Debug digital-cash",
-            "preLaunchTask": "digital-cash-debug-build",
-            "program": "${workspaceFolder}//digital-cash/debug/target/debug/digital-cash-debug",
-            "args": [],
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Debug mycontract",
-            "preLaunchTask": "mycontract-debug-build",
-            "program": "${workspaceFolder}//mycontract/debug/target/debug/mycontract-debug",
-            "args": [],
-            "cwd": "${workspaceFolder}"
+            "type": "node",
+            "name": "Dump env",
+            "args": ["-e", "console.log(JSON.stringify(process.env, null, 4))"],
+            "env": {"PATH":"${env:HOME}/elrondsdk/vendor-rust/bin:${env:HOME}/elrondsdk/erdpy-venv/bin:${env:HOME}/elrondsdk/arwentools:${env:HOME}/elrondsdk/nodejs/latest/bin:${env:PATH}","VIRTUAL_ENV":"${env:HOME}/elrondsdk/erdpy-venv","RUSTUP_HOME":"${env:HOME}/elrondsdk/vendor-rust","CARGO_HOME":"${env:HOME}/elrondsdk/vendor-rust"}
         }
     ]
 }

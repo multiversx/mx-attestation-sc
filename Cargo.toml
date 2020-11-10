@@ -1,15 +1,25 @@
 [package]
-    name = "attestation"
-    version = "0.2.0"
-
-[dependencies]
-    elrond-wasm = "0.5.1"
-    elrond-wasm-node = "0.5.1"
-    elrond-wasm-derive = "0.5.1"
+name = "attestation"
+version = "0.0.0"
+authors = ["sasurobert <robert.sasu@elrond.com>", "andrei-marinica <andrei.marinica@elrond.com>"]
+edition = "2018"
 
 [lib]
-    path = "src/lib.rs"
+path = "src/lib.rs"
 
-[[bin]]
-    name = "attestation"
-    path = "src/lib.rs"
+[features]
+wasm-output-mode = ["elrond-wasm-node"]
+
+[dependencies.elrond-wasm]
+version = "0.9.6"
+
+[dependencies.elrond-wasm-derive]
+version = "0.9.6"
+
+[dependencies.elrond-wasm-node]
+version = "0.9.6"
+optional = true
+features = ["small-int-ei"]
+
+[dev-dependencies.elrond-wasm-debug]
+version = "0.9.6"

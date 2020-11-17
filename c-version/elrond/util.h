@@ -1,3 +1,6 @@
+#ifndef _UTIL_H_
+#define _UTIL_H_
+
 #include "context.h"
 #include "bigInt.h"
 
@@ -37,3 +40,5 @@ ERROR_MSG(ERR_NOT_PAYABLE, "attempted to transfer funds via a non-payable functi
         return;\
     }\
 }
+
+#endif

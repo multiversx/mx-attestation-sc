@@ -1,4 +1,5 @@
 #include "helpers.h"
+#include "util.h"
 
 void _copy(byte *dest, const byte *src, int len)
 {
@@ -30,4 +31,10 @@ bool _equal(const byte *op1, const byte *op2, int len)
     }
 
     return true;
+}
+
+void _constructKey(const byte *prefix, int prefixLen,  const byte *arg, int argLen, byte *key)
+{
+    _copy(key, prefix, prefixLen);
+    _copyRange(key, arg, prefixLen, 0, argLen);
 }

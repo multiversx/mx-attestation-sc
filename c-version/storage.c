@@ -2,13 +2,15 @@
 
 #include "elrond/util.h"
 #include "helpers.h"
+#include "serde.h"
 
 // full keys
 STORAGE_KEY(REGISTRATION_COST); // -> BigInt
 STORAGE_KEY(MAX_NONCE_DIFF); // -> u64
-STORAGE_KEY(ATTESTATOR_LIST); // -> ADDRESS[]
+STORAGE_KEY(TOTAL_ATTESTATORS); // -> i64
 
 // partial keys
+STORAGE_KEY(LIST_ATTESTATOR) // + index -> ADDRESS
 STORAGE_KEY(ATTESTATOR); // + ADDRESS -> ValueState
 STORAGE_KEY(USER); // + HASH -> User
 
@@ -41,21 +43,61 @@ void _storeMaxNonceDiff(u64 nonce)
     storageStore(MAX_NONCE_DIFF_KEY, MAX_NONCE_DIFF_KEY_LEN, serialized, sizeof(u64));
 }
 
-int _loadAttestatorListLen()
+i64 _loadAttestorListLen()
 {
-    int lenInBytes = storageLoadLength(ATTESTATOR_LIST_KEY, ATTESTATOR_LIST_KEY_LEN);
-
-    return lenInBytes / sizeof(ADDRESS);
+    return int64storageLoad(TOTAL_ATTESTATORS_KEY, TOTAL_ATTESTATORS_KEY_LEN);
 }
 
-void _loadAttestorList(ADDRESS *attestors)
+void _storeAttestorListLen(i64 len)
 {
-    storageLoad(ATTESTATOR_LIST_KEY, ATTESTATOR_LIST_KEY_LEN, (byte*)attestors);
+    int64storageStore(TOTAL_ATTESTATORS_KEY, TOTAL_ATTESTATORS_KEY_LEN, len);
 }
 
-void _storeAttestorList(const ADDRESS *attestors, int len)
+void _loadAttestatorAt(i64 index, ADDRESS attestator)
 {
-    storageStore(ATTESTATOR_LIST_KEY, ATTESTATOR_LIST_KEY_LEN, (const byte*)attestors, len * sizeof(ADDRESS));
+    const int keyLen = LIST_ATTESTATOR_KEY_LEN + sizeof(i64);
+    byte key[keyLen] = {};
+    byte serializedIndex[sizeof(i64)] = {};
+
+    _serializeu64(index, serializedIndex);
+    _constructKey(LIST_ATTESTATOR_KEY, LIST_ATTESTATOR_KEY_LEN, 
+        serializedIndex, sizeof(i64), key);
+    
+    storageLoad(key, keyLen, attestator);
+}
+
+void _storeNewAttestator(const ADDRESS attestator)
+{
+    const int keyLen = LIST_ATTESTATOR_KEY_LEN + sizeof(i64);
+    byte key[keyLen] = {};
+    i64 index = _loadAttestorListLen();
+    byte serializedIndex[sizeof(i64)] = {};
+
+    _serializeu64(index, serializedIndex);
+    _constructKey(LIST_ATTESTATOR_KEY, LIST_ATTESTATOR_KEY_LEN, 
+        serializedIndex, sizeof(i64), key);
+
+    storageStore(key, keyLen, attestator, sizeof(ADDRESS));
+    _storeAttestorListLen(index + 1);
+}
+
+// deleting just moves the last element and overwrites the "deleted one"
+// this is done to maintain a contiguous list
+void _deleteAttestatorAt(i64 index)
+{
+    const int keyLen = LIST_ATTESTATOR_KEY_LEN + sizeof(i64);
+    byte deletedKey[keyLen] = {};
+    byte serializedDeletedIndex[sizeof(i64)] = {};
+    i64 lastIndex = _loadAttestorListLen() - 1;
+    ADDRESS lastAddress = {};
+
+    _loadAttestatorAt(lastIndex, lastAddress);
+
+    _serializeu64(index, serializedDeletedIndex);
+    _constructKey(LIST_ATTESTATOR_KEY, LIST_ATTESTATOR_KEY_LEN, 
+        serializedDeletedIndex, sizeof(i64), deletedKey);
+    storageStore(deletedKey, keyLen, lastAddress, sizeof(ADDRESS));
+    _storeAttestorListLen(lastIndex); // i.e. prev len - 1
 }
 
 ValueState _loadAttestatorState(const ADDRESS attestator)
@@ -70,7 +112,7 @@ ValueState _loadAttestatorState(const ADDRESS attestator)
     return (ValueState)result;
 }
 
-void _storeAttestorState(const ADDRESS attestator, ValueState state)
+void _storeAttestatorState(const ADDRESS attestator, ValueState state)
 {
     const int keyLen = ATTESTATOR_KEY_LEN + sizeof(ADDRESS);
     byte key[keyLen] = {};

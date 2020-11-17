@@ -53,3 +53,14 @@ bool _isZero(const byte *data, int len)
 
     return true;
 }
+
+bool _isCallerOwner()
+{
+    ADDRESS caller = {};
+    ADDRESS owner = {};
+
+    getCaller(caller);
+    getOwnerAddress(owner);
+
+    return _equal(caller, owner, sizeof(ADDRESS));
+}

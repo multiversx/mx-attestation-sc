@@ -16,9 +16,12 @@ ERROR_MSG(ERR_OUTSIDE_GRACE_PERIOD, "outside of grace period");
 ERROR_MSG(ERR_NO_USER_UNDER_KEY, "no user registered under key");
 ERROR_MSG(ERR_ONLY_USER_CAN_ATTEST, "only user can attest");
 ERROR_MSG(ERR_INFO_MISMATCH, "private/public info mismatch");
-
+ERROR_MSG(ERR_FORBIDDEN, "only the contract owner may call this function");
+ERROR_MSG(ERR_DOES_NOT_EXIST, "attestator does not exist");
+ERROR_MSG(ERR_CANNOT_DELETE_LAST, "cannot delete last attestator");
 
 GENERAL_MSG(MSG_OK, "ok");
+GENERAL_MSG(MSG_CLAIM, "attestation claim");
 
 // endpoints
 
@@ -42,8 +45,8 @@ void init()
     maxNonceDiff = _deserializeu64(maxNonceDiffAsBytes);
 
     _storeRegistrationCost(registrationCost);
-    _storeAttestorState(address, Approved);
-    _storeAttestorList(&address, 1);
+    _storeAttestatorState(address, Approved);
+    _storeNewAttestator(address);
     _storeMaxNonceDiff(maxNonceDiff);
 }
 
@@ -221,12 +224,145 @@ void attest()
     finish(MSG_OK, MSG_OK_LEN);
 }
 
+// Owner-only
+// Args:
+// ADDRESS attestator
+void addAttestator()
+{
+    CHECK_NOT_PAYABLE();
+    CHECK_NUM_ARGS(1);
+
+    ADDRESS attestator = {};
+    ADDRESS owner = {};
+    ADDRESS caller = {};
+    ValueState state;
+
+    getArgument(0, attestator);
+
+    getOwnerAddress(owner);
+    getCaller(caller);
+    if (!_equal(caller, owner, sizeof(ADDRESS)))
+    {
+        SIGNAL_ERROR(ERR_FORBIDDEN);
+    }
+
+    state = _loadAttestatorState(attestator);
+    if (state != None)
+    {
+        SIGNAL_ERROR(ERR_KEY_ALREADY_EXISTS);
+    }
+    if (!_storageUserIsEmpty(attestator))
+    {
+        SIGNAL_ERROR(ERR_ALREADY_REGISTERED);
+    }
+
+    _storeAttestatorState(attestator, Approved);
+    _storeNewAttestator(attestator);
+
+    finish(MSG_OK, MSG_OK_LEN);
+}
+
+// Owner-only
+// Args:
+// bigInt registrationCost
+void setRegisterCost()
+{
+    CHECK_NOT_PAYABLE();
+    CHECK_NUM_ARGS(1);
+
+    bigInt registrationCost = bigIntNew(0);
+
+    bigIntGetUnsignedArgument(0, registrationCost);
+
+    if (!_isCallerOwner())
+    {
+        SIGNAL_ERROR(ERR_FORBIDDEN);
+    }
+
+    _storeRegistrationCost(registrationCost);
+
+    finish(MSG_OK, MSG_OK_LEN);
+}
+
+// Owner-only
+// Args:
+// ADDRESS attestator
+void removeAttestator()
+{
+    CHECK_NOT_PAYABLE();
+    CHECK_NUM_ARGS(1);
+
+    ADDRESS attestator = {};
+    ADDRESS tempAttestator = {};
+    ValueState state;
+    i64 i;
+    i64 len;
+
+    getArgument(0, attestator);
+
+    if (!_isCallerOwner())
+    {
+        SIGNAL_ERROR(ERR_FORBIDDEN);
+    }
+
+    state = _loadAttestatorState(attestator);
+    if (state == None)
+    {
+        SIGNAL_ERROR(ERR_DOES_NOT_EXIST);
+    }
+
+    len = _loadAttestorListLen();
+    if (len == 1)
+    {
+        SIGNAL_ERROR(ERR_CANNOT_DELETE_LAST);
+    }
+
+    for (i = 0; i < len; i++)
+    {
+        _loadAttestatorAt(i, tempAttestator);
+        if (_equal(tempAttestator, attestator, sizeof(ADDRESS)))
+        {
+            _storeAttestatorState(attestator, None);
+            _deleteAttestatorAt(i);
+            break;
+        }
+    }
+
+    finish(MSG_OK, MSG_OK_LEN);
+}
+
+// Owner-only
+void claim()
+{
+    CHECK_NOT_PAYABLE();
+    CHECK_NUM_ARGS(0);
+
+    ADDRESS owner = {};
+    ADDRESS scAddress = {};
+    byte balance[32] = {};
+
+    if (!_isCallerOwner())
+    {
+        SIGNAL_ERROR(ERR_FORBIDDEN);
+    }
+
+    getOwnerAddress(owner);
+    getSCAddress(scAddress);
+    getExternalBalance(scAddress, balance);
+    transferValue(owner, balance, MSG_CLAIM, MSG_CLAIM_LEN);
+
+    finish(MSG_OK, MSG_OK_LEN);
+}
+
 // view functions
+
+
 
 // private functions
 
+// TO DO: Randomize the choice
+// Currently keeping it like this to mirror the Rust version
 void _selectAttestator(ADDRESS attestator)
 {
-    // TO DO
+    _loadAttestatorAt(_loadAttestorListLen() - 1, attestator);
 }
-

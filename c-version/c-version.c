@@ -19,6 +19,7 @@ ERROR_MSG(ERR_INFO_MISMATCH, "private/public info mismatch");
 ERROR_MSG(ERR_FORBIDDEN, "only the contract owner may call this function");
 ERROR_MSG(ERR_DOES_NOT_EXIST, "attestator does not exist");
 ERROR_MSG(ERR_CANNOT_DELETE_LAST, "cannot delete last attestator");
+ERROR_MSG(ERR_USER_DATA_NOT_ATTESTED, "userData not yet attested");
 
 GENERAL_MSG(MSG_OK, "ok");
 GENERAL_MSG(MSG_CLAIM, "attestation claim");
@@ -356,7 +357,53 @@ void claim()
 
 // view functions
 
+// Args:
+// HASH obfuscatedData
+// returns: serialized User
+void getUserData()
+{
+    CHECK_NOT_PAYABLE();
+    CHECK_NUM_ARGS(1);
 
+    HASH obfuscatedData = {};
+    byte rawUser[sizeof(User)] = {};
+    int len;
+
+    getArgument(0, obfuscatedData);
+
+    if (_storageUserIsEmpty(obfuscatedData))
+    {
+        SIGNAL_ERROR(ERR_NO_USER_UNDER_KEY);
+    }
+
+    len = _loadUserRaw(obfuscatedData, rawUser);
+
+    finish(rawUser, len);
+}
+
+// Args:
+// HASH obfuscatedData
+// returns: ADDRESS
+void getPublicKey()
+{
+    HASH obfuscatedData = {};
+    User user = {};
+
+    getArgument(0, obfuscatedData);
+
+    if (_storageUserIsEmpty(obfuscatedData))
+    {
+        SIGNAL_ERROR(ERR_NO_USER_UNDER_KEY);
+    }
+
+    _loadUser(obfuscatedData, &user);
+    if (user.valueState == Approved)
+    {
+        SIGNAL_ERROR(ERR_USER_DATA_NOT_ATTESTED);
+    }
+
+    finish(user.address, sizeof(ADDRESS));
+}
 
 // private functions
 

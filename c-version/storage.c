@@ -133,14 +133,21 @@ bool _storageUserIsEmpty(const HASH obfuscatedData)
     return storageLen == 0 ? true : false;
 }
 
-void _loadUser(const HASH obfuscatedData, User *user)
+int _loadUserRaw(const HASH obfuscatedData, byte *user)
 {
     const int keyLen = USER_KEY_LEN + sizeof(HASH);
     byte key[keyLen] = {};
-    byte serialized[sizeof(User)];
 
     _constructKey(USER_KEY, USER_KEY_LEN, obfuscatedData, sizeof(HASH), key);
-    storageLoad(key, keyLen, serialized);
+    
+    return storageLoad(key, keyLen, user);
+}
+
+void _loadUser(const HASH obfuscatedData, User *user)
+{
+    byte serialized[sizeof(User)];
+
+    _loadUserRaw(obfuscatedData, serialized);
     _deserializeUser(serialized, user);
 }
 

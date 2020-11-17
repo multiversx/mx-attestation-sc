@@ -18,6 +18,7 @@ void _deleteAttestatorAt(i64 index);
 ValueState _loadAttestatorState(const ADDRESS attestator);
 void _storeAttestatorState(const ADDRESS attestator, ValueState state);
 bool _storageUserIsEmpty(const HASH obfuscatedData);
+int _loadUserRaw(const HASH obfuscatedData, byte *user);
 void _loadUser(const HASH obfuscatedData, User *user);
 void _loadUserOrDefault(const HASH obfuscatedData, User *user);
 void _storeUser(const HASH obfuscatedData, const User *user);

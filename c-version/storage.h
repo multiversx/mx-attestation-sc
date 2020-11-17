@@ -17,6 +17,7 @@ ValueState _loadAttestatorState(const ADDRESS attestator);
 void _storeAttestorState(const ADDRESS attestator, ValueState state);
 bool _storageUserIsEmpty(const HASH obfuscatedData);
 void _loadUser(const HASH obfuscatedData, User *user);
+void _loadUserOrDefault(const HASH obfuscatedData, User *user);
 void _storeUser(const HASH obfuscatedData, const User *user);
 
 #endif

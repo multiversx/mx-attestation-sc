@@ -26,6 +26,7 @@ int createContract(long long gas, byte *value, byte *code, int codeSize, byte *n
 
 // Blockchain-related functions
 long long getBlockTimestamp();
+long long getBlockNonce();
 int getBlockHash(long long nonce, byte *hash);
 
 // Argument-related functions

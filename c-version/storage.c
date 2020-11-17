@@ -1,6 +1,7 @@
 #include "storage.h"
 
 #include "elrond/util.h"
+#include "helpers.h"
 
 // full keys
 STORAGE_KEY(REGISTRATION_COST); // -> BigInt
@@ -10,6 +11,8 @@ STORAGE_KEY(ATTESTATOR_LIST); // -> ADDRESS[]
 // partial keys
 STORAGE_KEY(ATTESTATOR); // + ADDRESS -> ValueState
 STORAGE_KEY(USER); // + HASH -> User
+
+const ADDRESS ZERO_32_BYTE_ARRAY = { 0 };
 
 void _loadRegistrationCost(bigInt cost)
 {
@@ -97,6 +100,24 @@ void _loadUser(const HASH obfuscatedData, User *user)
     _constructKey(USER_KEY, USER_KEY_LEN, obfuscatedData, sizeof(HASH), key);
     storageLoad(key, keyLen, serialized);
     _deserializeUser(serialized, user);
+}
+
+void _loadUserOrDefault(const HASH obfuscatedData, User *user)
+{
+    if (!_storageUserIsEmpty(obfuscatedData))
+    {
+        _loadUser(obfuscatedData, user);
+    }
+    else
+    {
+        user->valueState = None;
+        _copy(user->publicInfo, ZERO_32_BYTE_ARRAY, sizeof(HASH));
+        getCaller(user->address);
+        _copy(user->attester, ZERO_32_BYTE_ARRAY, sizeof(ADDRESS));
+        user->nonce = getBlockNonce();
+        user->privateInfoLen = 0;
+        // no need to initialize user->privateInfo
+    }
 }
 
 void _storeUser(const HASH obfuscatedData, const User *user)

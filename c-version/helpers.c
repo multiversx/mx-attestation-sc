@@ -1,5 +1,6 @@
 #include "helpers.h"
-#include "util.h"
+
+#include "elrond/util.h"
 
 void _copy(byte *dest, const byte *src, int len)
 {
@@ -37,4 +38,18 @@ void _constructKey(const byte *prefix, int prefixLen,  const byte *arg, int argL
 {
     _copy(key, prefix, prefixLen);
     _copyRange(key, arg, prefixLen, 0, argLen);
+}
+
+bool _isZero(const byte *data, int len)
+{
+    int i;
+    for (i = 0; i < len; i++)
+    {
+        if (data[i] != 0)
+        {
+            return false;
+        }
+    }
+
+    return true;
 }

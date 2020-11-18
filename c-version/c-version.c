@@ -296,8 +296,8 @@ void removeAttestator()
     ADDRESS attestator = {};
     ADDRESS tempAttestator = {};
     ValueState state;
-    i64 i;
-    i64 len;
+    u64 i;
+    u64 len;
 
     getArgument(0, attestator);
 

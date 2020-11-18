@@ -32,7 +32,8 @@ int getBlockHash(long long nonce, byte *hash);
 // Argument-related functions
 int getNumArguments();
 int getArgument(int argumentIndex, byte *argument);
-long long int64getArgument(int argumentIndex);
+long long smallIntGetUnsignedArgument(int argumentIndex);
+long long smallIntGetSignedArgument(int argumentIndex);
 int getArgumentLength(int argumentIndex);
 
 // Account-related functions
@@ -43,8 +44,10 @@ int transferValue(const byte *destination, const byte *value, const byte *data, 
 int storageLoadLength(const byte *key, int keyLength);
 int storageStore(const byte *key, int keyLength, const byte *data, int dataLength);
 int storageLoad(const byte *key, int keyLength, byte *data);
-int int64storageStore(const byte *key, int keyLength, long long value);
-long long int64storageLoad(const byte *key, int keyLength);
+int smallIntStorageStoreUnsigned(const byte *key, int keyLength, long long value);
+int smallIntStorageStoreSigned(const byte *key, int keyLength, long long value);
+long long smallIntStorageLoadUnsigned(const byte *key, int keyLength);
+long long smallIntStorageLoadSigned(const byte *key, int keyLength);
 
 // Timelocks-related functions
 int setStorageLock(byte *key, int keyLen, long long timeLock);

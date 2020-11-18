@@ -7,7 +7,7 @@
 // full keys
 STORAGE_KEY(REGISTRATION_COST); // -> BigInt
 STORAGE_KEY(MAX_NONCE_DIFF); // -> u64
-STORAGE_KEY(TOTAL_ATTESTATORS); // -> i64
+STORAGE_KEY(TOTAL_ATTESTATORS); // -> u64
 
 // partial keys
 STORAGE_KEY(LIST_ATTESTATOR) // + index -> ADDRESS
@@ -43,25 +43,25 @@ void _storeMaxNonceDiff(u64 nonce)
     storageStore(MAX_NONCE_DIFF_KEY, MAX_NONCE_DIFF_KEY_LEN, serialized, sizeof(u64));
 }
 
-i64 _loadAttestorListLen()
+u64 _loadAttestorListLen()
 {
-    return int64storageLoad(TOTAL_ATTESTATORS_KEY, TOTAL_ATTESTATORS_KEY_LEN);
+    return smallIntStorageLoadUnsigned(TOTAL_ATTESTATORS_KEY, TOTAL_ATTESTATORS_KEY_LEN);
 }
 
-void _storeAttestorListLen(i64 len)
+void _storeAttestorListLen(u64 len)
 {
-    int64storageStore(TOTAL_ATTESTATORS_KEY, TOTAL_ATTESTATORS_KEY_LEN, len);
+    smallIntStorageStoreUnsigned(TOTAL_ATTESTATORS_KEY, TOTAL_ATTESTATORS_KEY_LEN, len);
 }
 
-void _loadAttestatorAt(i64 index, ADDRESS attestator)
+void _loadAttestatorAt(u64 index, ADDRESS attestator)
 {
     const int keyLen = LIST_ATTESTATOR_KEY_LEN + sizeof(i64);
     byte key[keyLen] = {};
-    byte serializedIndex[sizeof(i64)] = {};
+    byte serializedIndex[sizeof(u64)] = {};
 
     _serializeu64(index, serializedIndex);
     _constructKey(LIST_ATTESTATOR_KEY, LIST_ATTESTATOR_KEY_LEN, 
-        serializedIndex, sizeof(i64), key);
+        serializedIndex, sizeof(u64), key);
     
     storageLoad(key, keyLen, attestator);
 }
@@ -70,12 +70,12 @@ void _storeNewAttestator(const ADDRESS attestator)
 {
     const int keyLen = LIST_ATTESTATOR_KEY_LEN + sizeof(i64);
     byte key[keyLen] = {};
-    i64 index = _loadAttestorListLen();
-    byte serializedIndex[sizeof(i64)] = {};
+    u64 index = _loadAttestorListLen();
+    byte serializedIndex[sizeof(u64)] = {};
 
     _serializeu64(index, serializedIndex);
     _constructKey(LIST_ATTESTATOR_KEY, LIST_ATTESTATOR_KEY_LEN, 
-        serializedIndex, sizeof(i64), key);
+        serializedIndex, sizeof(u64), key);
 
     storageStore(key, keyLen, attestator, sizeof(ADDRESS));
     _storeAttestorListLen(index + 1);
@@ -83,19 +83,19 @@ void _storeNewAttestator(const ADDRESS attestator)
 
 // deleting just moves the last element and overwrites the "deleted one"
 // this is done to maintain a contiguous list
-void _deleteAttestatorAt(i64 index)
+void _deleteAttestatorAt(u64 index)
 {
     const int keyLen = LIST_ATTESTATOR_KEY_LEN + sizeof(i64);
     byte deletedKey[keyLen] = {};
-    byte serializedDeletedIndex[sizeof(i64)] = {};
-    i64 lastIndex = _loadAttestorListLen() - 1;
+    byte serializedDeletedIndex[sizeof(u64)] = {};
+    u64 lastIndex = _loadAttestorListLen() - 1;
     ADDRESS lastAddress = {};
 
     _loadAttestatorAt(lastIndex, lastAddress);
 
     _serializeu64(index, serializedDeletedIndex);
     _constructKey(LIST_ATTESTATOR_KEY, LIST_ATTESTATOR_KEY_LEN, 
-        serializedDeletedIndex, sizeof(i64), deletedKey);
+        serializedDeletedIndex, sizeof(u64), deletedKey);
     storageStore(deletedKey, keyLen, lastAddress, sizeof(ADDRESS));
     _storeAttestorListLen(lastIndex); // i.e. prev len - 1
 }

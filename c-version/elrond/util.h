@@ -9,12 +9,12 @@
 #define false 0
 
 #define STORAGE_KEY(key) \
-    const int key##_KEY_LEN = sizeof #key - 1;\
-    byte key##_KEY[key##_KEY_LEN + 1] = #key;
+    static const int key##_KEY_LEN = sizeof #key - 1;\
+    static byte key##_KEY[key##_KEY_LEN + 1] = #key;
 
 #define ERROR_MSG(var, str) \
-    const int var##_LEN = sizeof str - 1;\
-    byte var[var##_LEN + 1] = str;
+    static const int var##_LEN = sizeof str - 1;\
+    static byte var[var##_LEN + 1] = str;
 
 #define GENERAL_MSG(var, str) \
     const int var##_LEN = sizeof str - 1;\

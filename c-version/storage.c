@@ -161,7 +161,7 @@ void _loadUserOrDefault(const HASH obfuscatedData, User *user)
     {
         user->valueState = None;
         _copy(user->publicInfo, ZERO_32_BYTE_ARRAY, sizeof(HASH));
-        getCaller(user->address);
+        _copy(user->address, ZERO_32_BYTE_ARRAY, sizeof(ADDRESS));
         _copy(user->attester, ZERO_32_BYTE_ARRAY, sizeof(ADDRESS));
         user->nonce = getBlockNonce();
         user->privateInfoLen = 0;

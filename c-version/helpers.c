@@ -64,3 +64,29 @@ bool _isCallerOwner()
 
     return _equal(caller, owner, sizeof(ADDRESS));
 }
+
+// fake memcpy
+void* memcpy(void *dest, const void *src, unsigned long n)
+{
+    char *csrc = (char *)src;
+    char *cdest = (char *)dest;
+
+    for (int i = 0; i < n; i++)
+    {
+        cdest[i] = csrc[i];
+    }
+
+    return dest;
+}
+
+// fake memset
+void* memset(void *dest, int c, unsigned long n)
+{
+    int i;
+    char *cdest = (char *)dest;
+    for (i = 0; i < n; i++)
+    {
+        cdest[i] = c;
+    }
+    return dest;
+}

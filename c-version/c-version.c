@@ -21,8 +21,9 @@ ERROR_MSG(ERR_DOES_NOT_EXIST, "attestator does not exist");
 ERROR_MSG(ERR_CANNOT_DELETE_LAST, "cannot delete last attestator");
 ERROR_MSG(ERR_USER_DATA_NOT_ATTESTED, "userData not yet attested");
 
-GENERAL_MSG(MSG_OK, "ok");
 GENERAL_MSG(MSG_CLAIM, "attestation claim");
+
+void _selectAttestator(ADDRESS attestator);
 
 // endpoints
 
@@ -100,7 +101,7 @@ void registerData()
     }
     if (_isZero(user.attester, sizeof(ADDRESS)))
     {
-        // select attestator
+        _selectAttestator(user.attester);
     }
 
     user.nonce = getBlockNonce();
@@ -110,8 +111,6 @@ void registerData()
     }
 
     _storeUser(obfuscatedData, &user);
-
-    finish(MSG_OK, MSG_OK_LEN);
 }
 
 // Args:
@@ -165,8 +164,6 @@ void savePublicInfo()
     user.valueState = Pending;
 
     _storeUser(obfuscatedData, &user);
-
-    finish(MSG_OK, MSG_OK_LEN);
 }
 
 // Args:
@@ -219,8 +216,6 @@ void attest()
     user.privateInfoLen = privateInfoLen;
     user.valueState = Approved;
     _storeUser(obfuscatedData, &user);
-
-    finish(MSG_OK, MSG_OK_LEN);
 }
 
 // Owner-only
@@ -257,8 +252,6 @@ void addAttestator()
 
     _storeAttestatorState(attestator, Approved);
     _storeNewAttestator(attestator);
-
-    finish(MSG_OK, MSG_OK_LEN);
 }
 
 // Owner-only
@@ -279,8 +272,6 @@ void setRegisterCost()
     }
 
     _storeRegistrationCost(registrationCost);
-
-    finish(MSG_OK, MSG_OK_LEN);
 }
 
 // Owner-only
@@ -326,8 +317,6 @@ void removeAttestator()
             break;
         }
     }
-
-    finish(MSG_OK, MSG_OK_LEN);
 }
 
 // Owner-only
@@ -349,8 +338,6 @@ void claim()
     getSCAddress(scAddress);
     getExternalBalance(scAddress, balance);
     transferValue(owner, balance, MSG_CLAIM, MSG_CLAIM_LEN);
-
-    finish(MSG_OK, MSG_OK_LEN);
 }
 
 // view functions

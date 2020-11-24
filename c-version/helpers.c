@@ -65,7 +65,6 @@ bool _isCallerOwner()
     return _equal(caller, owner, sizeof(ADDRESS));
 }
 
-// fake memcpy
 void* memcpy(void *dest, const void *src, unsigned long n)
 {
     char *csrc = (char *)src;
@@ -79,7 +78,6 @@ void* memcpy(void *dest, const void *src, unsigned long n)
     return dest;
 }
 
-// fake memset
 void* memset(void *dest, int c, unsigned long n)
 {
     int i;

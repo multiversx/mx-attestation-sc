@@ -1,6 +1,10 @@
 #ifndef _TYPES_H_
 #define _TYPES_H_
 
+#define NULL 0
+#define true 1
+#define false 0
+
 typedef unsigned char byte;
 typedef unsigned int u32;
 typedef int i32;

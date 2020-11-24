@@ -37,13 +37,11 @@ void init()
     
     bigInt registrationCost = bigIntNew(0);
     ADDRESS address = {};
-    byte maxNonceDiffAsBytes[sizeof(u64)] = {};
     u64 maxNonceDiff;
 
     bigIntGetUnsignedArgument(0, registrationCost);
     getArgument(1, address);
-    getArgument(2, maxNonceDiffAsBytes);
-    maxNonceDiff = _deserializeu64(maxNonceDiffAsBytes);
+    maxNonceDiff = smallIntGetUnsignedArgument(2);
 
     _storeRegistrationCost(registrationCost);
     _storeAttestatorState(address, Approved);

@@ -28,19 +28,12 @@ void _storeRegistrationCost(bigInt cost)
 
 u64 _loadMaxNonceDiff()
 {
-    byte serialized[sizeof(u64)] = {};
-
-    storageLoad(MAX_NONCE_DIFF_KEY, MAX_NONCE_DIFF_KEY_LEN, serialized);
-
-    return _deserializeu64(serialized); 
+    return smallIntStorageLoadUnsigned(MAX_NONCE_DIFF_KEY, MAX_NONCE_DIFF_KEY_LEN);
 }
 
 void _storeMaxNonceDiff(u64 nonce)
 {
-    byte serialized[sizeof(u64)] = {};
-
-    _serializeu64(nonce, serialized);
-    storageStore(MAX_NONCE_DIFF_KEY, MAX_NONCE_DIFF_KEY_LEN, serialized, sizeof(u64));
+    smallIntStorageStoreUnsigned(MAX_NONCE_DIFF_KEY, MAX_NONCE_DIFF_KEY_LEN, nonce);
 }
 
 u64 _loadAttestorListLen()

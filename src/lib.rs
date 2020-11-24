@@ -1,7 +1,7 @@
 #![no_std]
 #![allow(clippy::string_lit_as_bytes)]
 
-mod user;
+pub mod user;
 mod value_state;
 
 use user::User;

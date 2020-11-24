@@ -1,6 +1,6 @@
 #include "helpers.h"
 
-#include "elrond/util.h"
+#include "elrond/context.h"
 
 void _copy(byte *dest, const byte *src, int len)
 {

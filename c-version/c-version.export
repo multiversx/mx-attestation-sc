@@ -1,0 +1,10 @@
+init
+registerData
+savePublicInfo
+attest
+addAttestator
+setRegisterCost
+removeAttestator
+claim
+getUserData
+getPublicKey

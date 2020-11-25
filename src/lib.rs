@@ -1,7 +1,7 @@
 #![no_std]
 #![allow(clippy::string_lit_as_bytes)]
 
-mod user;
+pub mod user;
 mod value_state;
 
 pub use user::User;
@@ -234,7 +234,7 @@ pub trait Attestation {
 			value_state: ValueState::None,
 			public_info: H256::zero(),
 			private_info: BoxedBytes::empty(),
-			address: self.get_caller(),
+			address: H256::zero(),
 			attester: Address::zero(),
 			nonce: self.get_block_nonce(),
 		})

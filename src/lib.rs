@@ -4,8 +4,8 @@
 mod user;
 mod value_state;
 
-use user::User;
-use value_state::ValueState;
+pub use user::User;
+pub use value_state::ValueState;
 
 imports!();
 

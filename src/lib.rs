@@ -122,10 +122,7 @@ pub trait Attestation {
 		);
 
 		let caller = self.get_caller();
-		require!(
-			user_state.address == caller,
-			"only user can attest"
-		);
+		require!(user_state.address == caller, "only user can attest");
 
 		let hashed = self.keccak256(private_info.as_slice());
 		require!(

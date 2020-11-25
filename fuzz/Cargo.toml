@@ -1,6 +1,10 @@
 
 [package]
+<<<<<<< HEAD
 name = "attestation-fuzz"
+=======
+name = "attstation-fuzz"
+>>>>>>> master
 version = "0.0.0"
 authors = ["Automatically generated"]
 publish = false
@@ -11,9 +15,14 @@ cargo-fuzz = true
 
 [dependencies]
 libfuzzer-sys = "0.3"
+<<<<<<< HEAD
 elrond-wasm = "0.7.1"
 elrond-wasm-debug = "0.7.3"
 
+=======
+elrond-wasm = "0.9.8"
+elrond-wasm-debug = "0.9.8"
+>>>>>>> master
 
 [dependencies.attestation]
 path = ".."
@@ -27,3 +36,12 @@ name = "fuzz_user"
 path = "fuzz_targets/fuzz_user.rs"
 test = false
 doc = false
+<<<<<<< HEAD
+=======
+
+[[bin]]
+name = "fuzz_value_state"
+path = "fuzz_targets/fuzz_value_state.rs"
+test = false
+doc = false
+>>>>>>> master

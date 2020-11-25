@@ -12,6 +12,10 @@
         {
             "step": "externalSteps",
             "path": "save_public_info_ok.steps.json"
+        },
+        {
+            "step": "externalSteps",
+            "path": "attest_ok.steps.json"
         }
     ]
 }

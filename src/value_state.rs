@@ -1,6 +1,6 @@
 use elrond_wasm::elrond_codec::*;
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum ValueState {
 	None,
 	Requested,
@@ -17,7 +17,7 @@ impl ValueState {
 		}
 	}
 
-	pub fn to_u64(&self) -> u64 {
+	pub fn to_u8(&self) -> u8 {
 		match self {
 			ValueState::None => 0,
 			ValueState::Requested => 1,
@@ -29,7 +29,7 @@ impl ValueState {
 
 impl NestedEncode for ValueState {
 	fn dep_encode<O: NestedEncodeOutput>(&self, dest: &mut O) -> Result<(), EncodeError> {
-		self.to_u64().dep_encode(dest)
+		self.to_u8().dep_encode(dest)
 	}
 
 	fn dep_encode_or_exit<O: NestedEncodeOutput, ExitCtx: Clone>(
@@ -38,29 +38,28 @@ impl NestedEncode for ValueState {
 		c: ExitCtx,
 		exit: fn(ExitCtx, EncodeError) -> !,
 	) {
-		self.to_u64().dep_encode_or_exit(dest, c, exit);
+		self.to_u8().dep_encode_or_exit(dest, c, exit);
 	}
 }
 
 impl TopEncode for ValueState {
 	fn top_encode<O: TopEncodeOutput>(&self, output: O) -> Result<(), EncodeError> {
-		output.set_u64(self.to_u64());
-		Ok(())
+		self.to_u8().top_encode(output)
 	}
 
 	fn top_encode_or_exit<O: TopEncodeOutput, ExitCtx: Clone>(
 		&self,
 		output: O,
-		_: ExitCtx,
-		_: fn(ExitCtx, EncodeError) -> !,
+		c: ExitCtx,
+		exit: fn(ExitCtx, EncodeError) -> !,
 	) {
-		output.set_u64(self.to_u64());
+		self.to_u8().top_encode_or_exit(output, c, exit);
 	}
 }
 
 impl NestedDecode for ValueState {
 	fn dep_decode<I: NestedDecodeInput>(input: &mut I) -> Result<Self, DecodeError> {
-		match u64::dep_decode(input)? {
+		match u8::dep_decode(input)? {
 			0 => Ok(ValueState::None),
 			1 => Ok(ValueState::Requested),
 			2 => Ok(ValueState::Pending),
@@ -74,7 +73,7 @@ impl NestedDecode for ValueState {
 		c: ExitCtx,
 		exit: fn(ExitCtx, DecodeError) -> !,
 	) -> Self {
-		match u32::dep_decode_or_exit(input, c.clone(), exit) {
+		match u8::dep_decode_or_exit(input, c.clone(), exit) {
 			0 => ValueState::None,
 			1 => ValueState::Requested,
 			2 => ValueState::Pending,
@@ -86,7 +85,7 @@ impl NestedDecode for ValueState {
 
 impl TopDecode for ValueState {
 	fn top_decode<I: TopDecodeInput>(input: I) -> Result<Self, DecodeError> {
-		match u64::top_decode(input)? {
+		match u8::top_decode(input)? {
 			0 => Ok(ValueState::None),
 			1 => Ok(ValueState::Requested),
 			2 => Ok(ValueState::Pending),
@@ -100,7 +99,7 @@ impl TopDecode for ValueState {
 		c: ExitCtx,
 		exit: fn(ExitCtx, DecodeError) -> !,
 	) -> Self {
-		match u32::top_decode_or_exit(input, c.clone(), exit) {
+		match u8::top_decode_or_exit(input, c.clone(), exit) {
 			0 => ValueState::None,
 			1 => ValueState::Requested,
 			2 => ValueState::Pending,

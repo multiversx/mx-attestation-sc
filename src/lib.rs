@@ -4,8 +4,8 @@
 mod user;
 mod value_state;
 
-use user::User;
-use value_state::ValueState;
+pub use user::User;
+pub use value_state::ValueState;
 
 imports!();
 
@@ -122,10 +122,7 @@ pub trait Attestation {
 		);
 
 		let caller = self.get_caller();
-		require!(
-			user_state.address == caller,
-			"only user can attest"
-		);
+		require!(user_state.address == caller, "only user can attest");
 
 		let hashed = self.keccak256(private_info.as_slice());
 		require!(

@@ -57,7 +57,7 @@
                     "storage": {
                         "str:registration_cost": "500,000",
                         "str:max_nonce_diff": "1000",
-                        "str:attestator|address:attester": "3",
+                        "str:attestator_state|address:attester": "3",
                         "str:attestator_list": "address:attester"
                     },
                     "code": "file:../output/attestation.wasm"

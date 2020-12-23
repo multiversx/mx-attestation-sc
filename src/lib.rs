@@ -16,7 +16,7 @@ pub trait Attestation {
 		self.set_registration_cost(registration_cost);
 		self.set_attestator_state(&address, &ValueState::Approved);
 
-		let mut attestator_list: Vec<Address> = Vec::new();
+		let mut attestator_list: Vec<Address> = Vec::with_capacity(1);
 		attestator_list.push(address);
 
 		self.set_attestator_list(&attestator_list[..]);
@@ -24,26 +24,19 @@ pub trait Attestation {
 	}
 
 	#[endpoint]
-	fn version(&self) -> &'static str {
-		env!("CARGO_PKG_VERSION")
+	fn version(&self) -> &'static [u8] {
+		env!("CARGO_PKG_VERSION").as_bytes()
 	}
 
 	#[payable]
 	#[endpoint]
-	fn register(&self, obfuscated_data: &H256, #[payment] payment: BigUint) -> SCResult<()> {
+	fn register(&self, obfuscated_data: H256, #[payment] payment: BigUint) -> SCResult<()> {
 		require!(
 			payment == self.get_registration_cost(),
 			"should pay exactly the registration cost"
 		);
 
-		let attestator_s = self.get_attestator_state(obfuscated_data);
-		require!(
-			!attestator_s.exists(),
-			"is not allowed to save under attestator key"
-		);
-
-		let mut user_state = self.get_user_or_default(obfuscated_data);
-
+		let mut user_state = self.get_user_or_default(&obfuscated_data);
 		require!(
 			user_state.value_state != ValueState::Approved,
 			"user already registered"
@@ -69,7 +62,7 @@ pub trait Attestation {
 			user_state.value_state = ValueState::Requested;
 		}
 
-		self.set_user_state(obfuscated_data, &user_state);
+		self.set_user_state(&obfuscated_data, &user_state);
 
 		Ok(())
 	}
@@ -142,14 +135,20 @@ pub trait Attestation {
 		Ok(())
 	}
 
+	#[endpoint(setRegisterCost)]
+	fn set_register_cost(&self, registration_cost: &BigUint) -> SCResult<()> {
+		only_owner!(self, "only owner can set registraction cost");
+
+		self.set_registration_cost(registration_cost);
+		Ok(())
+	}
+
 	#[endpoint(addAttestator)]
 	fn add_attestator(&self, address: Address) -> SCResult<()> {
 		only_owner!(self, "only owner can add attestator");
 
 		let attestator_s = self.get_attestator_state(&address);
 		require!(!attestator_s.exists(), "attestator already exists");
-
-		require!(self.is_empty_user_state(&address), "user already exists");
 
 		self.set_attestator_state(&address, &ValueState::Approved);
 
@@ -158,14 +157,6 @@ pub trait Attestation {
 
 		self.set_attestator_list(&attestator_list[..]);
 
-		Ok(())
-	}
-
-	#[endpoint(setRegisterCost)]
-	fn set_register_cost(&self, registration_cost: &BigUint) -> SCResult<()> {
-		only_owner!(self, "only owner can set registraction cost");
-
-		self.set_registration_cost(registration_cost);
 		Ok(())
 	}
 
@@ -194,7 +185,11 @@ pub trait Attestation {
 		only_owner!(self, "only owner can claim");
 
 		let contract_owner = self.get_owner_address();
-		self.send_tx(&contract_owner, &self.get_sc_balance(), "attestation claim");
+		self.send_tx(
+			&contract_owner,
+			&self.get_sc_balance(),
+			b"attestation claim",
+		);
 
 		Ok(())
 	}
@@ -234,7 +229,7 @@ pub trait Attestation {
 			value_state: ValueState::None,
 			public_info: H256::zero(),
 			private_info: BoxedBytes::empty(),
-			address: H256::zero(),
+			address: Address::zero(),
 			attester: Address::zero(),
 			nonce: self.get_block_nonce(),
 		})
@@ -264,10 +259,10 @@ pub trait Attestation {
 	#[storage_set("max_nonce_diff")]
 	fn set_max_nonce_diff(&self, max_nonce_diff: u64);
 
-	#[storage_get("attestator")]
+	#[storage_get("attestator_state")]
 	fn get_attestator_state(&self, address: &Address) -> ValueState;
 
-	#[storage_set("attestator")]
+	#[storage_set("attestator_state")]
 	fn set_attestator_state(&self, address: &Address, value_state: &ValueState);
 
 	#[storage_get("attestator_list")]
@@ -276,12 +271,12 @@ pub trait Attestation {
 	#[storage_set("attestator_list")]
 	fn set_attestator_list(&self, attestator_list: &[Address]);
 
-	#[storage_is_empty("user")]
+	#[storage_is_empty("user_state")]
 	fn is_empty_user_state(&self, obfuscated_data: &H256) -> bool;
 
-	#[storage_get("user")]
+	#[storage_get("user_state")]
 	fn get_user_state(&self, obfuscated_data: &H256) -> Box<User>;
 
-	#[storage_set("user")]
+	#[storage_set("user_state")]
 	fn set_user_state(&self, obfuscated_data: &H256, user: &User);
 }

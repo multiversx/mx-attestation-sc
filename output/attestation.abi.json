@@ -1,0 +1,202 @@
+{
+    "name": "Attestation",
+    "endpoints": [
+        {
+            "name": "init",
+            "inputs": [
+                {
+                    "name": "registration_cost",
+                    "type": "BigUint"
+                },
+                {
+                    "name": "address",
+                    "type": "Address"
+                },
+                {
+                    "name": "max_nonce_diff",
+                    "type": "u64"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "version",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "bytes"
+                }
+            ]
+        },
+        {
+            "name": "register",
+            "payableInTokens": [
+                "EGLD"
+            ],
+            "inputs": [
+                {
+                    "name": "obfuscated_data",
+                    "type": "H256"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "savePublicInfo",
+            "inputs": [
+                {
+                    "name": "obfuscated_data",
+                    "type": "H256"
+                },
+                {
+                    "name": "public_info",
+                    "type": "H256"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "attest",
+            "inputs": [
+                {
+                    "name": "obfuscated_data",
+                    "type": "H256"
+                },
+                {
+                    "name": "private_info",
+                    "type": "bytes"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "setRegisterCost",
+            "inputs": [
+                {
+                    "name": "registration_cost",
+                    "type": "BigUint"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "addAttestator",
+            "inputs": [
+                {
+                    "name": "address",
+                    "type": "Address"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "removeAttestator",
+            "inputs": [
+                {
+                    "name": "address",
+                    "type": "Address"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "claim",
+            "inputs": [],
+            "outputs": []
+        },
+        {
+            "name": "getUserData",
+            "inputs": [
+                {
+                    "name": "obfuscated_data",
+                    "type": "H256"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "User"
+                }
+            ]
+        },
+        {
+            "name": "getPublicKey",
+            "inputs": [
+                {
+                    "name": "obfuscated_data",
+                    "type": "H256"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "Address"
+                }
+            ]
+        },
+        {
+            "name": "getRegistrationCost",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "BigUint"
+                }
+            ]
+        },
+        {
+            "name": "getMaxNonceDiff",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "u64"
+                }
+            ]
+        }
+    ],
+    "types": {
+        "User": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "value_state",
+                    "type": "ValueState"
+                },
+                {
+                    "name": "public_info",
+                    "type": "H256"
+                },
+                {
+                    "name": "private_info",
+                    "type": "bytes"
+                },
+                {
+                    "name": "address",
+                    "type": "Address"
+                },
+                {
+                    "name": "attester",
+                    "type": "Address"
+                },
+                {
+                    "name": "nonce",
+                    "type": "u64"
+                }
+            ]
+        },
+        "ValueState": {
+            "type": "enum",
+            "variants": [
+                {
+                    "name": "None"
+                },
+                {
+                    "name": "Requested"
+                },
+                {
+                    "name": "Pending"
+                },
+                {
+                    "name": "Approved"
+                }
+            ]
+        }
+    }
+}

@@ -1,0 +1,15 @@
+[package]
+name = "attestation-abi"
+version = "0.0.0"
+authors = ["andrei-marinica <andrei.marinica@elrond.com>"]
+edition = "2018"
+publish = false
+
+[dependencies.attestation]
+path = ".."
+
+[dependencies.elrond-wasm]
+version = "0.10.0"
+
+[dependencies.elrond-wasm-debug]
+version = "0.10.0"

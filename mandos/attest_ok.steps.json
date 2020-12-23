@@ -40,9 +40,9 @@
                     "storage": {
                         "str:registration_cost": "500,000",
                         "str:max_nonce_diff": "1000",
-                        "str:attestator|address:attester": "3",
+                        "str:attestator_state|address:attester": "3",
                         "str:attestator_list": "address:attester",
-                        "str:user|0x6d2ff32e31b14e2edbdfe411d3873edc90d77bd0a3b5779355686ff82a171a8d": [
+                        "str:user_state|0x6d2ff32e31b14e2edbdfe411d3873edc90d77bd0a3b5779355686ff82a171a8d": [
                             "u8:3",
                             "0x18805c46852ee738c3daba511a465c4b42cbe6306a9491b037b8194bc7d6c13b",
                             "u32:11|str:secret_data",

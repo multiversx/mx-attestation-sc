@@ -14,8 +14,5 @@ fn contract_map() -> ContractMap<TxContext> {
 
 #[test]
 fn big_test() {
-	parse_execute_mandos(
-		"mandos/main.scen.json",
-		&contract_map(),
-	);
+	parse_execute_mandos("mandos/main.scen.json", &contract_map());
 }

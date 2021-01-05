@@ -29,6 +29,10 @@
             ]
         },
         {
+            "docs": [
+                "Called by the user.",
+                "Overwrites anything previously saved under `obfuscated_data`, if possible."
+            ],
             "name": "register",
             "payableInTokens": [
                 "EGLD"
@@ -42,7 +46,11 @@
             "outputs": []
         },
         {
-            "name": "savePublicInfo",
+            "docs": [
+                "Called by the user.",
+                "`public_info` is currently the hash of the OTP."
+            ],
+            "name": "saveAttestation",
             "inputs": [
                 {
                     "name": "obfuscated_data",
@@ -56,7 +64,11 @@
             "outputs": []
         },
         {
-            "name": "attest",
+            "docs": [
+                "Called by the attestator.",
+                "Needs to be the correct attestator, as assigned by the contract."
+            ],
+            "name": "confirmAttestation",
             "inputs": [
                 {
                     "name": "obfuscated_data",
@@ -105,7 +117,7 @@
             "outputs": []
         },
         {
-            "name": "getUserData",
+            "name": "getUserState",
             "inputs": [
                 {
                     "name": "obfuscated_data",
@@ -114,7 +126,8 @@
             ],
             "outputs": [
                 {
-                    "type": "User"
+                    "type": "OptionalResult<User>",
+                    "multi_result": true
                 }
             ]
         },

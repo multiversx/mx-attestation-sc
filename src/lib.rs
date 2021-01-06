@@ -150,7 +150,7 @@ pub trait Attestation {
 
 	#[endpoint(setRegisterCost)]
 	fn set_register_cost(&self, registration_cost: &BigUint) -> SCResult<()> {
-		only_owner!(self, "only owner can set registraction cost");
+		only_owner!(self, "only owner can set registration cost");
 
 		self.set_registration_cost(registration_cost);
 		Ok(())

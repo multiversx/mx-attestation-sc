@@ -2,23 +2,6 @@
     "name": "register ok",
     "steps": [
         {
-            "step": "setState",
-            "accounts": {
-                "address:acc1": {
-                    "nonce": "0",
-                    "balance": "1,000,000",
-                    "storage": {},
-                    "code": ""
-                },
-                "address:attester": {
-                    "nonce": "0",
-                    "balance": "1,000,000",
-                    "storage": {},
-                    "code": ""
-                }
-            }
-        },
-        {
             "step": "scCall",
             "txId": "register-ok",
             "comment": "arg is keccak256(keccak256(str:0123 456 789))",

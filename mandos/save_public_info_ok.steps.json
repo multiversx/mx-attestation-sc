@@ -12,10 +12,10 @@
             "txId": "save-public-info-ok",
             "comment": "args are keccak256(keccak256(str:0123 456 789)), keccak256(str:secret_data) respectively",
             "tx": {
-                "from": "address:attester",
+                "from": "address:acc1",
                 "to": "address:contract",
                 "value": "0",
-                "function": "savePublicInfo",
+                "function": "saveAttestation",
                 "arguments": [
                     "0x6d2ff32e31b14e2edbdfe411d3873edc90d77bd0a3b5779355686ff82a171a8d",
                     "0x18805c46852ee738c3daba511a465c4b42cbe6306a9491b037b8194bc7d6c13b"
@@ -35,7 +35,7 @@
             "step": "checkState",
             "accounts": {
                 "address:attester": {
-                    "nonce": "1",
+                    "nonce": "0",
                     "balance": "1,000,000",
                     "storage": {},
                     "code": ""

@@ -80,8 +80,8 @@ pub trait Attestation {
 		let mut user_state = self.get_user_state(obfuscated_data);
 
 		require!(
-			user_state.value_state != ValueState::Approved,
-			"user already registered"
+			user_state.value_state == ValueState::Requested,
+			"user not in requested state"
 		);
 
 		require!(

@@ -80,8 +80,8 @@ pub trait Attestation {
 		let mut user_state = self.get_user_state(obfuscated_data);
 
 		require!(
-			user_state.value_state != ValueState::Approved,
-			"user already registered"
+			user_state.value_state == ValueState::Requested,
+			"user not in requested state"
 		);
 
 		require!(
@@ -234,25 +234,6 @@ pub trait Attestation {
 		let attestator_list = self.get_attestator_list();
 		//TODO add random selection from length of list and the random number
 		attestator_list[attestator_list.len() - 1].clone()
-	}
-
-	fn default_user(&self) -> Box<User> {
-		Box::new(User {
-			value_state: ValueState::None,
-			public_info: H256::zero(),
-			private_info: BoxedBytes::empty(),
-			address: Address::zero(),
-			attester: Address::zero(),
-			nonce: self.get_block_nonce(),
-		})
-	}
-
-	fn get_user_or_default(&self, obfuscated_data: &H256) -> Box<User> {
-		if self.is_empty_user_state(obfuscated_data) {
-			self.default_user()
-		} else {
-			self.get_user_state(obfuscated_data)
-		}
 	}
 
 	// STORAGE

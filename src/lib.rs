@@ -7,7 +7,7 @@ mod value_state;
 pub use user::User;
 pub use value_state::ValueState;
 
-imports!();
+elrond_wasm::imports!();
 
 #[elrond_wasm_derive::contract(AttestationImpl)]
 pub trait Attestation {
@@ -36,7 +36,7 @@ pub trait Attestation {
 				"user already registered"
 			);
 			require!(
-				self.get_block_nonce() - existing_user_state.nonce >= self.get_max_nonce_diff(),
+				self.blockchain().get_block_nonce() - existing_user_state.nonce >= self.get_max_nonce_diff(),
 				"data already registered for other user"
 			);
 		}
@@ -59,9 +59,9 @@ pub trait Attestation {
 			value_state: ValueState::Requested,
 			public_info: H256::zero(),
 			private_info: BoxedBytes::empty(),
-			address: self.get_caller(),
+			address: self.blockchain().get_caller(),
 			attester: self.select_attestator(),
-			nonce: self.get_block_nonce(),
+			nonce: self.blockchain().get_block_nonce(),
 		});
 		self.set_user_state(&obfuscated_data, &user_state);
 
@@ -85,11 +85,11 @@ pub trait Attestation {
 		);
 
 		require!(
-			user_state.address == self.get_caller(),
+			user_state.address == self.blockchain().get_caller(),
 			"only user can attest"
 		);
 
-		let block_nonce = self.get_block_nonce();
+		let block_nonce = self.blockchain().get_block_nonce();
 		require!(
 			block_nonce - user_state.nonce <= self.get_max_nonce_diff(),
 			"registration period expired"
@@ -112,7 +112,7 @@ pub trait Attestation {
 		obfuscated_data: &H256,
 		private_info: BoxedBytes,
 	) -> SCResult<()> {
-		let caller = self.get_caller();
+		let caller = self.blockchain().get_caller();
 		let attestator_s = self.get_attestator_state(&caller);
 		require!(attestator_s.exists(), "caller is not an attestator");
 
@@ -130,14 +130,14 @@ pub trait Attestation {
 
 		require!(user_state.attester == caller, "not the selected attester");
 
-		let hashed = self.keccak256(private_info.as_slice());
+		let hashed = self.crypto().keccak256(private_info.as_slice());
 		require!(
 			hashed == user_state.public_info,
 			"private/public info mismatch"
 		);
 
 		require!(
-			self.get_block_nonce() - user_state.nonce <= self.get_max_nonce_diff(),
+			self.blockchain().get_block_nonce() - user_state.nonce <= self.get_max_nonce_diff(),
 			"outside of grace period"
 		);
 
@@ -197,10 +197,10 @@ pub trait Attestation {
 	fn claim(&self) -> SCResult<()> {
 		only_owner!(self, "only owner can claim");
 
-		let contract_owner = self.get_owner_address();
-		self.send_tx(
+		let contract_owner = self.blockchain().get_owner_address();
+		self.send().direct_egld(
 			&contract_owner,
-			&self.get_sc_balance(),
+			&self.blockchain().get_sc_balance(),
 			b"attestation claim",
 		);
 

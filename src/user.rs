@@ -1,7 +1,7 @@
 use super::ValueState;
-use elrond_wasm::{Address, BoxedBytes, H256};
+use elrond_wasm::types::{Address, BoxedBytes, H256};
 
-derive_imports!();
+elrond_wasm::derive_imports!();
 
 #[derive(TopEncode, TopDecode, TypeAbi, Clone, PartialEq, Debug)]
 pub struct User {

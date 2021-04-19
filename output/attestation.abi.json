@@ -1,24 +1,23 @@
 {
     "name": "Attestation",
+    "constructor": {
+        "inputs": [
+            {
+                "name": "registration_cost",
+                "type": "BigUint"
+            },
+            {
+                "name": "address",
+                "type": "Address"
+            },
+            {
+                "name": "max_nonce_diff",
+                "type": "u64"
+            }
+        ],
+        "outputs": []
+    },
     "endpoints": [
-        {
-            "name": "init",
-            "inputs": [
-                {
-                    "name": "registration_cost",
-                    "type": "BigUint"
-                },
-                {
-                    "name": "address",
-                    "type": "Address"
-                },
-                {
-                    "name": "max_nonce_diff",
-                    "type": "u64"
-                }
-            ],
-            "outputs": []
-        },
         {
             "name": "version",
             "inputs": [],
@@ -126,7 +125,7 @@
             ],
             "outputs": [
                 {
-                    "type": "OptionalResult<User>",
+                    "type": "optional<User>",
                     "multi_result": true
                 }
             ]
@@ -198,16 +197,20 @@
             "type": "enum",
             "variants": [
                 {
-                    "name": "None"
+                    "name": "None",
+                    "discriminant": 0
                 },
                 {
-                    "name": "Requested"
+                    "name": "Requested",
+                    "discriminant": 1
                 },
                 {
-                    "name": "Pending"
+                    "name": "Pending",
+                    "discriminant": 2
                 },
                 {
-                    "name": "Approved"
+                    "name": "Approved",
+                    "discriminant": 3
                 }
             ]
         }

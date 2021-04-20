@@ -1,6 +1,6 @@
 [package]
 name = "attestation"
-version = "0.0.0"
+version = "1.0.1"
 authors = ["sasurobert <robert.sasu@elrond.com>", "andrei-marinica <andrei.marinica@elrond.com>"]
 edition = "2018"
 

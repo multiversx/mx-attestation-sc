@@ -1,5 +1,6 @@
 {
     "name": "all tests",
+    "gasSchedule": "v2",
     "steps": [
         {
             "step": "externalSteps",

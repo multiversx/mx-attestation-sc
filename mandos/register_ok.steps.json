@@ -13,7 +13,7 @@
                 "arguments": [
                     "0x6d2ff32e31b14e2edbdfe411d3873edc90d77bd0a3b5779355686ff82a171a8d"
                 ],
-                "gasLimit": "100,000",
+                "gasLimit": "15,000,000",
                 "gasPrice": "0"
             },
             "expect": {

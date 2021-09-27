@@ -12,12 +12,38 @@ elrond_wasm::imports!();
 #[elrond_wasm::contract]
 pub trait Attestation {
 	#[init]
-	fn init(&self, registration_cost: Self::BigUint, address: Address, max_nonce_diff: u64) {
+	fn init(
+		&self,
+		registration_cost: Self::BigUint,
+		max_nonce_diff: u64,
+		#[var_args] attesters: VarArgs<Address>,
+	) -> SCResult<()> {
+		require!(!attesters.is_empty(), "Cannot have empty attester list");
+
 		self.registration_cost().set(&registration_cost);
-		self.attestator_state(&address).set(&ValueState::Approved);
 		self.max_nonce_diff().set(&max_nonce_diff);
 
-		let _ = self.attestator_list().insert(address);
+		// SetMapper does not have a .clear() method, so we do it the ugly way
+		// cannot remove during the iteration, as that would destroy the iterator's internal state
+		let nr_old_attesters = self.attestator_list().len();
+		if nr_old_attesters > 0 {
+			let mut old_attesters = Vec::with_capacity(nr_old_attesters);
+			for old_attester in self.attestator_list().iter() {
+				old_attesters.push(old_attester);
+			}
+
+			for old_attester in old_attesters {
+				let _ = self.attestator_list().remove(&old_attester);
+				self.attestator_state(&old_attester).clear();
+			}
+		}
+
+		for attester in attesters.into_vec() {
+			self.attestator_state(&attester).set(&ValueState::Approved);
+			let _ = self.attestator_list().insert(attester);
+		}
+
+		Ok(())
 	}
 
 	#[endpoint]
@@ -210,7 +236,7 @@ pub trait Attestation {
 			user_state.value_state == ValueState::Approved,
 			"userData not yet attested"
 		);
-		
+
 		Ok(user_state.address)
 	}
 

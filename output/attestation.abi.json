@@ -7,12 +7,13 @@
                 "type": "BigUint"
             },
             {
-                "name": "address",
-                "type": "Address"
-            },
-            {
                 "name": "max_nonce_diff",
                 "type": "u64"
+            },
+            {
+                "name": "attesters",
+                "type": "variadic<Address>",
+                "multi_arg": true
             }
         ],
         "outputs": []

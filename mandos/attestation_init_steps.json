@@ -27,7 +27,7 @@
                 {
                     "creatorAddress": "address:owner",
                     "creatorNonce": "0",
-                    "newAddress": "address:contract"
+                    "newAddress": "sc:attestation"
                 }
             ]
         },
@@ -43,13 +43,13 @@
                     "address:attester",
                     "1,000"
                 ],
-                "gasLimit": "100,000",
+                "gasLimit": "15,000,000",
                 "gasPrice": "0"
             },
             "expect": {
+                "status": "0",
+                "message": "",
                 "out": [],
-                "status": "",
-                "logs": [],
                 "gas": "*",
                 "refund": "*"
             }
@@ -63,14 +63,18 @@
                     "storage": {},
                     "code": ""
                 },
-                "address:contract": {
+                "sc:attestation": {
                     "nonce": "0",
                     "balance": "0",
                     "storage": {
                         "str:registration_cost": "500,000",
                         "str:max_nonce_diff": "1000",
                         "str:attestator_state|address:attester": "3",
-                        "str:attestator_list": "address:attester"
+
+                        "str:attestator_list.info": "u32:1|u32:1|u32:1|u32:1",
+                        "str:attestator_list.node_id|address:attester": "1",
+                        "str:attestator_list.node_links|u32:1": "u32:0|u32:0",
+                        "str:attestator_list.value|u32:1": "address:attester"
                     },
                     "code": "file:../output/attestation.wasm"
                 },

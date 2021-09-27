@@ -1,24 +1,23 @@
 {
     "name": "Attestation",
+    "constructor": {
+        "inputs": [
+            {
+                "name": "registration_cost",
+                "type": "BigUint"
+            },
+            {
+                "name": "address",
+                "type": "Address"
+            },
+            {
+                "name": "max_nonce_diff",
+                "type": "u64"
+            }
+        ],
+        "outputs": []
+    },
     "endpoints": [
-        {
-            "name": "init",
-            "inputs": [
-                {
-                    "name": "registration_cost",
-                    "type": "BigUint"
-                },
-                {
-                    "name": "address",
-                    "type": "Address"
-                },
-                {
-                    "name": "max_nonce_diff",
-                    "type": "u64"
-                }
-            ],
-            "outputs": []
-        },
         {
             "name": "version",
             "inputs": [],
@@ -65,8 +64,7 @@
         },
         {
             "docs": [
-                "Called by the attestator.",
-                "Needs to be the correct attestator, as assigned by the contract."
+                "Called by the attestator."
             ],
             "name": "confirmAttestation",
             "inputs": [
@@ -83,6 +81,7 @@
         },
         {
             "name": "setRegisterCost",
+            "onlyOwner": true,
             "inputs": [
                 {
                     "name": "registration_cost",
@@ -93,6 +92,7 @@
         },
         {
             "name": "addAttestator",
+            "onlyOwner": true,
             "inputs": [
                 {
                     "name": "address",
@@ -103,6 +103,7 @@
         },
         {
             "name": "removeAttestator",
+            "onlyOwner": true,
             "inputs": [
                 {
                     "name": "address",
@@ -113,6 +114,7 @@
         },
         {
             "name": "claim",
+            "onlyOwner": true,
             "inputs": [],
             "outputs": []
         },
@@ -126,7 +128,7 @@
             ],
             "outputs": [
                 {
-                    "type": "OptionalResult<User>",
+                    "type": "optional<User>",
                     "multi_result": true
                 }
             ]
@@ -185,10 +187,6 @@
                     "type": "Address"
                 },
                 {
-                    "name": "attester",
-                    "type": "Address"
-                },
-                {
                     "name": "nonce",
                     "type": "u64"
                 }
@@ -198,16 +196,20 @@
             "type": "enum",
             "variants": [
                 {
-                    "name": "None"
+                    "name": "None",
+                    "discriminant": 0
                 },
                 {
-                    "name": "Requested"
+                    "name": "Requested",
+                    "discriminant": 1
                 },
                 {
-                    "name": "Pending"
+                    "name": "Pending",
+                    "discriminant": 2
                 },
                 {
-                    "name": "Approved"
+                    "name": "Approved",
+                    "discriminant": 3
                 }
             ]
         }

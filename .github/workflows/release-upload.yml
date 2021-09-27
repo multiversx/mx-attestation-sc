@@ -24,7 +24,7 @@ jobs:
         with:
           tag: ${{ github.ref }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ./examples-wasm.zip
+          file: ./attestation-wasm.zip
           asset_name: attestation-wasm.zip
           overwrite: true
           body: "The release"

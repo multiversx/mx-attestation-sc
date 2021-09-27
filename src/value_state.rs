@@ -1,4 +1,4 @@
-derive_imports!();
+elrond_wasm::derive_imports!();
 
 #[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi, Clone, PartialEq, Debug)]
 pub enum ValueState {

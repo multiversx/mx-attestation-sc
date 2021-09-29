@@ -46,6 +46,7 @@
                             "keccak256:str:secret_data",
                             "nested:str:secret_data",
                             "address:acc1",
+                            "0x0000000000000000000000000000000000000000000000000000000000000000",
                             "u64:50"
                         ],
                         "str:attestator_list.value|u32:1": "address:attester",

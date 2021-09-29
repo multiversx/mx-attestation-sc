@@ -168,14 +168,6 @@ pub trait Attestation {
 	#[endpoint(removeAttestator)]
 	fn remove_attestator(&self, address: Address) {
 		self.attestator_state(&address).clear();
-
-		/*
-		/* TODO: Maybe keep a "nr attesters" in storage and check the last one isn't removed */
-		require!(
-			!self.attestator_list().is_empty(),
-			"cannot delete last attestator"
-		);
-		*/
 	}
 
 	#[only_owner]

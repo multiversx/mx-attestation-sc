@@ -84,6 +84,7 @@ pub trait Attestation {
 			public_info: H256::zero(),
 			private_info: BoxedBytes::empty(),
 			address: self.blockchain().get_caller(),
+			_attester: Address::zero(),
 			nonce: self.blockchain().get_block_nonce(),
 		});
 		self.user_state(&obfuscated_data).set(&user_state);

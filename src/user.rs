@@ -9,6 +9,7 @@ pub struct User {
 	pub public_info: H256,
 	pub private_info: BoxedBytes,
 	pub address: Address,
+	pub _attester: Address, // ignored, only kept for backwards compatibility
 	pub nonce: u64,
 }
 
@@ -24,6 +25,7 @@ mod codec_tests {
 			public_info: H256::zero(),
 			private_info: BoxedBytes::empty(),
 			address: Address::zero(),
+			_attester: Address::zero(),
 			nonce: 0,
 		};
 		let encoded = check_top_encode(&user);

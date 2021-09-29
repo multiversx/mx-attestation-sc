@@ -23,24 +23,8 @@ pub trait Attestation {
 		self.registration_cost().set(&registration_cost);
 		self.max_nonce_diff().set(&max_nonce_diff);
 
-		// SetMapper does not have a .clear() method, so we do it the ugly way
-		// cannot remove during the iteration, as that would destroy the iterator's internal state
-		let nr_old_attesters = self.attestator_list().len();
-		if nr_old_attesters > 0 {
-			let mut old_attesters = Vec::with_capacity(nr_old_attesters);
-			for old_attester in self.attestator_list().iter() {
-				old_attesters.push(old_attester);
-			}
-
-			for old_attester in old_attesters {
-				let _ = self.attestator_list().remove(&old_attester);
-				self.attestator_state(&old_attester).clear();
-			}
-		}
-
 		for attester in attesters.into_vec() {
 			self.attestator_state(&attester).set(&ValueState::Approved);
-			let _ = self.attestator_list().insert(attester);
 		}
 
 		Ok(())
@@ -146,7 +130,7 @@ pub trait Attestation {
 			"must be called after saveAttestation"
 		);
 		require!(
-			self.attestator_list().contains(&caller),
+			self.attestator_state(&caller).get() == ValueState::Approved,
 			"caller is not an attester"
 		);
 
@@ -176,31 +160,22 @@ pub trait Attestation {
 
 	#[only_owner]
 	#[endpoint(addAttestator)]
-	fn add_attestator(&self, address: Address) -> SCResult<()> {
-		let attestator_s = self.attestator_state(&address).get();
-		require!(!attestator_s.exists(), "attestator already exists");
-
+	fn add_attestator(&self, address: Address) {
 		self.attestator_state(&address).set(&ValueState::Approved);
-		let _ = self.attestator_list().insert(address);
-
-		Ok(())
 	}
 
 	#[only_owner]
 	#[endpoint(removeAttestator)]
-	fn remove_attestator(&self, address: Address) -> SCResult<()> {
-		let attestator_s = self.attestator_state(&address).get();
-		require!(attestator_s.exists(), "attestator does not exist");
+	fn remove_attestator(&self, address: Address) {
+		self.attestator_state(&address).clear();
 
-		let _ = self.attestator_list().remove(&address);
-		self.attestator_state(&address).set(&ValueState::None);
-
+		/*
+		/* TODO: Maybe keep a "nr attesters" in storage and check the last one isn't removed */
 		require!(
 			!self.attestator_list().is_empty(),
 			"cannot delete last attestator"
 		);
-
-		Ok(())
+		*/
 	}
 
 	#[only_owner]
@@ -253,9 +228,6 @@ pub trait Attestation {
 
 	#[storage_mapper("attestator_state")]
 	fn attestator_state(&self, address: &Address) -> SingleValueMapper<Self::Storage, ValueState>;
-
-	#[storage_mapper("attestator_list")]
-	fn attestator_list(&self) -> SafeSetMapper<Self::Storage, Address>;
 
 	#[storage_mapper("user_state")]
 	fn user_state(&self, obfuscated_data: &H256) -> SingleValueMapper<Self::Storage, Box<User>>;

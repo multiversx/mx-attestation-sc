@@ -35,7 +35,10 @@ pub trait Attestation {
 		env!("CARGO_PKG_VERSION").as_bytes()
 	}
 
-	fn can_overwrite_user_data(&self, obfuscated_data: &H256) -> SCResult<()> {
+	fn can_overwrite_user_data(
+		&self,
+		obfuscated_data: &ManagedByteArray<Self::Api, 32>,
+	) -> SCResult<()> {
 		if !self.user_state(obfuscated_data).is_empty() {
 			let existing_user_state = self.user_state(obfuscated_data).get();
 			require!(
@@ -55,7 +58,11 @@ pub trait Attestation {
 	/// Overwrites anything previously saved under `obfuscated_data`, if possible.
 	#[payable("EGLD")]
 	#[endpoint]
-	fn register(&self, obfuscated_data: H256, #[payment] payment: BigUint) -> SCResult<()> {
+	fn register(
+		&self,
+		obfuscated_data: ManagedByteArray<Self::Api, 32>,
+		#[payment] payment: BigUint,
+	) -> SCResult<()> {
 		require!(
 			payment == self.registration_cost().get(),
 			"should pay the exact registration cost"
@@ -65,8 +72,8 @@ pub trait Attestation {
 
 		let user_state = Box::new(User {
 			value_state: ValueState::Requested,
-			public_info: H256::zero(),
-			private_info: BoxedBytes::empty(),
+			public_info: ManagedByteArray::managed_default(self.raw_vm_api()),
+			private_info: ManagedBuffer::new(),
 			address: self.blockchain().get_caller(),
 			_attester: ManagedAddress::zero(),
 			nonce: self.blockchain().get_block_nonce(),
@@ -79,7 +86,11 @@ pub trait Attestation {
 	/// Called by the user.
 	/// `public_info` is currently the hash of the OTP.
 	#[endpoint(saveAttestation)]
-	fn save_attestation(&self, obfuscated_data: &H256, public_info: H256) -> SCResult<()> {
+	fn save_attestation(
+		&self,
+		obfuscated_data: &ManagedByteArray<Self::Api, 32>,
+		public_info: ManagedByteArray<Self::Api, 32>,
+	) -> SCResult<()> {
 		require!(
 			!self.user_state(obfuscated_data).is_empty(),
 			"registration not started for user"
@@ -113,7 +124,11 @@ pub trait Attestation {
 
 	/// Called by the attestator.
 	#[endpoint(confirmAttestation)]
-	fn confirm_attestation(&self, obfuscated_data: H256, private_info: BoxedBytes) -> SCResult<()> {
+	fn confirm_attestation(
+		&self,
+		obfuscated_data: ManagedByteArray<Self::Api, 32>,
+		private_info: ManagedBuffer,
+	) -> SCResult<()> {
 		let caller = self.blockchain().get_caller();
 		let attestator_s = self.attestator_state(&caller).get();
 		require!(attestator_s.exists(), "caller is not an attestator");
@@ -134,7 +149,13 @@ pub trait Attestation {
 			"caller is not an attester"
 		);
 
-		let hashed = self.crypto().keccak256(private_info.as_slice());
+		// TODO: use more elegant managed crypto api when available
+		let hashed = ManagedByteArray::new_from_bytes(
+			self.raw_vm_api(),
+			self.crypto()
+				.keccak256(private_info.to_boxed_bytes().as_slice())
+				.as_array(),
+		);
 		require!(
 			hashed == user_state.public_info,
 			"private/public info mismatch"
@@ -185,7 +206,10 @@ pub trait Attestation {
 	}
 
 	#[view(getUserState)]
-	fn get_user_state_endpoint(&self, obfuscated_data: H256) -> OptionalResult<Box<User<Self::Api>>> {
+	fn get_user_state_endpoint(
+		&self,
+		obfuscated_data: ManagedByteArray<Self::Api, 32>,
+	) -> OptionalResult<Box<User<Self::Api>>> {
 		if !self.user_state(&obfuscated_data).is_empty() {
 			OptionalResult::Some(self.user_state(&obfuscated_data).get())
 		} else {
@@ -194,7 +218,10 @@ pub trait Attestation {
 	}
 
 	#[view(getPublicKey)]
-	fn get_public_key(&self, obfuscated_data: H256) -> SCResult<ManagedAddress> {
+	fn get_public_key(
+		&self,
+		obfuscated_data: ManagedByteArray<Self::Api, 32>,
+	) -> SCResult<ManagedAddress> {
 		require!(
 			!self.user_state(&obfuscated_data).is_empty(),
 			"no user registered under key"
@@ -219,8 +246,14 @@ pub trait Attestation {
 	fn max_nonce_diff(&self) -> SingleValueMapper<Self::Api, u64>;
 
 	#[storage_mapper("attestator_state")]
-	fn attestator_state(&self, address: &ManagedAddress) -> SingleValueMapper<Self::Api, ValueState>;
+	fn attestator_state(
+		&self,
+		address: &ManagedAddress,
+	) -> SingleValueMapper<Self::Api, ValueState>;
 
 	#[storage_mapper("user_state")]
-	fn user_state(&self, obfuscated_data: &H256) -> SingleValueMapper<Self::Api, Box<User<Self::Api>>>;
+	fn user_state(
+		&self,
+		obfuscated_data: &ManagedByteArray<Self::Api, 32>,
+	) -> SingleValueMapper<Self::Api, Box<User<Self::Api>>>;
 }

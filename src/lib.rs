@@ -14,9 +14,9 @@ pub trait Attestation {
 	#[init]
 	fn init(
 		&self,
-		registration_cost: Self::BigUint,
+		registration_cost: BigUint,
 		max_nonce_diff: u64,
-		#[var_args] attesters: VarArgs<Address>,
+		#[var_args] attesters: VarArgs<ManagedAddress>,
 	) -> SCResult<()> {
 		require!(!attesters.is_empty(), "Cannot have empty attester list");
 
@@ -55,7 +55,7 @@ pub trait Attestation {
 	/// Overwrites anything previously saved under `obfuscated_data`, if possible.
 	#[payable("EGLD")]
 	#[endpoint]
-	fn register(&self, obfuscated_data: H256, #[payment] payment: Self::BigUint) -> SCResult<()> {
+	fn register(&self, obfuscated_data: H256, #[payment] payment: BigUint) -> SCResult<()> {
 		require!(
 			payment == self.registration_cost().get(),
 			"should pay the exact registration cost"
@@ -68,7 +68,7 @@ pub trait Attestation {
 			public_info: H256::zero(),
 			private_info: BoxedBytes::empty(),
 			address: self.blockchain().get_caller(),
-			_attester: Address::zero(),
+			_attester: ManagedAddress::zero(),
 			nonce: self.blockchain().get_block_nonce(),
 		});
 		self.user_state(&obfuscated_data).set(&user_state);
@@ -154,19 +154,19 @@ pub trait Attestation {
 
 	#[only_owner]
 	#[endpoint(setRegisterCost)]
-	fn set_register_cost(&self, registration_cost: Self::BigUint) {
+	fn set_register_cost(&self, registration_cost: BigUint) {
 		self.registration_cost().set(&registration_cost);
 	}
 
 	#[only_owner]
 	#[endpoint(addAttestator)]
-	fn add_attestator(&self, address: Address) {
+	fn add_attestator(&self, address: ManagedAddress) {
 		self.attestator_state(&address).set(&ValueState::Approved);
 	}
 
 	#[only_owner]
 	#[endpoint(removeAttestator)]
-	fn remove_attestator(&self, address: Address) {
+	fn remove_attestator(&self, address: ManagedAddress) {
 		self.attestator_state(&address).clear();
 	}
 
@@ -185,7 +185,7 @@ pub trait Attestation {
 	}
 
 	#[view(getUserState)]
-	fn get_user_state_endpoint(&self, obfuscated_data: H256) -> OptionalResult<Box<User>> {
+	fn get_user_state_endpoint(&self, obfuscated_data: H256) -> OptionalResult<Box<User<Self::Api>>> {
 		if !self.user_state(&obfuscated_data).is_empty() {
 			OptionalResult::Some(self.user_state(&obfuscated_data).get())
 		} else {
@@ -194,7 +194,7 @@ pub trait Attestation {
 	}
 
 	#[view(getPublicKey)]
-	fn get_public_key(&self, obfuscated_data: H256) -> SCResult<Address> {
+	fn get_public_key(&self, obfuscated_data: H256) -> SCResult<ManagedAddress> {
 		require!(
 			!self.user_state(&obfuscated_data).is_empty(),
 			"no user registered under key"
@@ -212,15 +212,15 @@ pub trait Attestation {
 
 	#[view(getRegistrationCost)]
 	#[storage_mapper("registration_cost")]
-	fn registration_cost(&self) -> SingleValueMapper<Self::Storage, Self::BigUint>;
+	fn registration_cost(&self) -> SingleValueMapper<Self::Api, BigUint>;
 
 	#[view(getMaxNonceDiff)]
 	#[storage_mapper("max_nonce_diff")]
-	fn max_nonce_diff(&self) -> SingleValueMapper<Self::Storage, u64>;
+	fn max_nonce_diff(&self) -> SingleValueMapper<Self::Api, u64>;
 
 	#[storage_mapper("attestator_state")]
-	fn attestator_state(&self, address: &Address) -> SingleValueMapper<Self::Storage, ValueState>;
+	fn attestator_state(&self, address: &ManagedAddress) -> SingleValueMapper<Self::Api, ValueState>;
 
 	#[storage_mapper("user_state")]
-	fn user_state(&self, obfuscated_data: &H256) -> SingleValueMapper<Self::Storage, Box<User>>;
+	fn user_state(&self, obfuscated_data: &H256) -> SingleValueMapper<Self::Api, Box<User<Self::Api>>>;
 }

@@ -11,8 +11,7 @@ fn contract_map() -> ContractMap<TxContext> {
 	contract_map
 }
 
-// TODO: uncomment after upgrading to 0.19 or
-// #[test]
-// fn attestation_main_rs() {
-// 	elrond_wasm_debug::mandos_rs("mandos/main.scen.json", &contract_map());
-// }
+#[test]
+fn attestation_main_rs() {
+	elrond_wasm_debug::mandos_rs("mandos/main.scen.json", &contract_map());
+}

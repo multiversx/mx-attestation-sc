@@ -259,21 +259,18 @@ pub trait Attestation {
 
 	#[view(getRegistrationCost)]
 	#[storage_mapper("registration_cost")]
-	fn registration_cost(&self) -> SingleValueMapper<Self::Api, BigUint>;
+	fn registration_cost(&self) -> SingleValueMapper<BigUint>;
 
 	#[view(getMaxNonceDiff)]
 	#[storage_mapper("max_nonce_diff")]
-	fn max_nonce_diff(&self) -> SingleValueMapper<Self::Api, u64>;
+	fn max_nonce_diff(&self) -> SingleValueMapper<u64>;
 
 	#[storage_mapper("attestator_state")]
-	fn attestator_state(
-		&self,
-		address: &ManagedAddress,
-	) -> SingleValueMapper<Self::Api, ValueState>;
+	fn attestator_state(&self, address: &ManagedAddress) -> SingleValueMapper<ValueState>;
 
 	#[storage_mapper("user_state")]
 	fn user_state(
 		&self,
 		obfuscated_data: &ManagedByteArray<Self::Api, HASH_LEN>,
-	) -> SingleValueMapper<Self::Api, User<Self::Api>>;
+	) -> SingleValueMapper<User<Self::Api>>;
 }

@@ -1,5 +1,6 @@
 {
     "name": "save public info ok",
+    "gasSchedule": "v4",
     "steps": [
         {
             "step": "setState",

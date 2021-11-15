@@ -1,5 +1,6 @@
 {
     "name": "attestation deploy",
+    "gasSchedule": "v4",
     "steps": [
         {
             "step": "setState",

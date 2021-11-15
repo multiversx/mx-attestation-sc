@@ -9,6 +9,13 @@ pub use value_state::ValueState;
 
 elrond_wasm::imports!();
 
+const HASH_LEN: usize = 32;
+const TEMP_HASH_INPUT_BUFFER_SIZE: usize = 200;
+
+extern "C" {
+	fn keccak256(dataOffset: *const u8, length: i32, resultOffset: *mut u8) -> i32;
+}
+
 #[elrond_wasm::contract]
 pub trait Attestation {
 	#[init]
@@ -16,14 +23,14 @@ pub trait Attestation {
 		&self,
 		registration_cost: BigUint,
 		max_nonce_diff: u64,
-		#[var_args] attesters: VarArgs<ManagedAddress>,
+		#[var_args] attesters: ManagedVarArgs<ManagedAddress>,
 	) -> SCResult<()> {
 		require!(!attesters.is_empty(), "Cannot have empty attester list");
 
 		self.registration_cost().set(&registration_cost);
 		self.max_nonce_diff().set(&max_nonce_diff);
 
-		for attester in attesters.into_vec() {
+		for attester in attesters {
 			self.attestator_state(&attester).set(&ValueState::Approved);
 		}
 
@@ -37,7 +44,7 @@ pub trait Attestation {
 
 	fn can_overwrite_user_data(
 		&self,
-		obfuscated_data: &ManagedByteArray<Self::Api, 32>,
+		obfuscated_data: &ManagedByteArray<Self::Api, HASH_LEN>,
 	) -> SCResult<()> {
 		if !self.user_state(obfuscated_data).is_empty() {
 			let existing_user_state = self.user_state(obfuscated_data).get();
@@ -60,7 +67,7 @@ pub trait Attestation {
 	#[endpoint]
 	fn register(
 		&self,
-		obfuscated_data: ManagedByteArray<Self::Api, 32>,
+		obfuscated_data: ManagedByteArray<Self::Api, HASH_LEN>,
 		#[payment] payment: BigUint,
 	) -> SCResult<()> {
 		require!(
@@ -70,14 +77,14 @@ pub trait Attestation {
 
 		self.can_overwrite_user_data(&obfuscated_data)?;
 
-		let user_state = Box::new(User {
+		let user_state = User {
 			value_state: ValueState::Requested,
 			public_info: ManagedByteArray::managed_default(self.raw_vm_api()),
 			private_info: ManagedBuffer::new(),
 			address: self.blockchain().get_caller(),
 			_attester: ManagedAddress::zero(),
 			nonce: self.blockchain().get_block_nonce(),
-		});
+		};
 		self.user_state(&obfuscated_data).set(&user_state);
 
 		Ok(())
@@ -88,8 +95,8 @@ pub trait Attestation {
 	#[endpoint(saveAttestation)]
 	fn save_attestation(
 		&self,
-		obfuscated_data: &ManagedByteArray<Self::Api, 32>,
-		public_info: ManagedByteArray<Self::Api, 32>,
+		obfuscated_data: &ManagedByteArray<Self::Api, HASH_LEN>,
+		public_info: ManagedByteArray<Self::Api, HASH_LEN>,
 	) -> SCResult<()> {
 		require!(
 			!self.user_state(obfuscated_data).is_empty(),
@@ -126,7 +133,7 @@ pub trait Attestation {
 	#[endpoint(confirmAttestation)]
 	fn confirm_attestation(
 		&self,
-		obfuscated_data: ManagedByteArray<Self::Api, 32>,
+		obfuscated_data: ManagedByteArray<Self::Api, HASH_LEN>,
 		private_info: ManagedBuffer,
 	) -> SCResult<()> {
 		let caller = self.blockchain().get_caller();
@@ -149,13 +156,7 @@ pub trait Attestation {
 			"caller is not an attester"
 		);
 
-		// TODO: use more elegant managed crypto api when available
-		let hashed = ManagedByteArray::new_from_bytes(
-			self.raw_vm_api(),
-			self.crypto()
-				.keccak256(private_info.to_boxed_bytes().as_slice())
-				.as_array(),
-		);
+		let hashed = self.hash_unsafe(&private_info);
 		require!(
 			hashed == user_state.public_info,
 			"private/public info mismatch"
@@ -208,8 +209,8 @@ pub trait Attestation {
 	#[view(getUserState)]
 	fn get_user_state_endpoint(
 		&self,
-		obfuscated_data: ManagedByteArray<Self::Api, 32>,
-	) -> OptionalResult<Box<User<Self::Api>>> {
+		obfuscated_data: ManagedByteArray<Self::Api, HASH_LEN>,
+	) -> OptionalResult<User<Self::Api>> {
 		if !self.user_state(&obfuscated_data).is_empty() {
 			OptionalResult::Some(self.user_state(&obfuscated_data).get())
 		} else {
@@ -220,7 +221,7 @@ pub trait Attestation {
 	#[view(getPublicKey)]
 	fn get_public_key(
 		&self,
-		obfuscated_data: ManagedByteArray<Self::Api, 32>,
+		obfuscated_data: ManagedByteArray<Self::Api, HASH_LEN>,
 	) -> SCResult<ManagedAddress> {
 		require!(
 			!self.user_state(&obfuscated_data).is_empty(),
@@ -233,6 +234,25 @@ pub trait Attestation {
 		);
 
 		Ok(user_state.address)
+	}
+
+	// temporary until managed crypto API is available
+	fn hash_unsafe(&self, buffer: &ManagedBuffer) -> ManagedByteArray<Self::Api, HASH_LEN> {
+		unsafe {
+			let mut buffer_bytes = [0u8; TEMP_HASH_INPUT_BUFFER_SIZE];
+			let mut hashed_result = [0u8; HASH_LEN];
+
+			let buffer_len = buffer.len();
+			let _ = buffer.load_slice(0, &mut buffer_bytes[..buffer_len]);
+
+			keccak256(
+				buffer_bytes.as_ptr(),
+				buffer_len as i32,
+				hashed_result.as_mut_ptr(),
+			);
+
+			ManagedByteArray::new_from_bytes(self.raw_vm_api(), &hashed_result)
+		}
 	}
 
 	// STORAGE
@@ -254,6 +274,6 @@ pub trait Attestation {
 	#[storage_mapper("user_state")]
 	fn user_state(
 		&self,
-		obfuscated_data: &ManagedByteArray<Self::Api, 32>,
-	) -> SingleValueMapper<Self::Api, Box<User<Self::Api>>>;
+		obfuscated_data: &ManagedByteArray<Self::Api, HASH_LEN>,
+	) -> SingleValueMapper<Self::Api, User<Self::Api>>;
 }

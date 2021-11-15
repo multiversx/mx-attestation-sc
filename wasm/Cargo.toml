@@ -15,12 +15,13 @@ panic = "abort"
 
 [dependencies.attestation]
 path = ".."
-features = ["wasm-output-mode"]
-default-features = false
-
-[dependencies.elrond-wasm-output]
-version = "0.18.2"
-features = ["wasm-output-mode"]
 
 [workspace]
 members = ["."]
+
+[dependencies.elrond-wasm-node]
+version = "0.22.10"
+
+[dependencies.elrond-wasm-output]
+version = "0.22.10"
+features = ["wasm-output-mode"]

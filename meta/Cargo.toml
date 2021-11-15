@@ -1,5 +1,5 @@
 [package]
-name = "attestation-abi"
+name = "attestation-meta"
 version = "0.0.0"
 authors = ["andrei-marinica <andrei.marinica@elrond.com>"]
 edition = "2018"
@@ -9,7 +9,7 @@ publish = false
 path = ".."
 
 [dependencies.elrond-wasm]
-version = "0.18.2"
+version = "0.22.10"
 
 [dependencies.elrond-wasm-debug]
-version = "0.18.2"
+version = "0.22.10"

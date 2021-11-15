@@ -1,5 +1,6 @@
 {
     "name": "confirmAttestation ok",
+    "gasSchedule": "v4",
     "steps": [
         {
             "step": "scCall",

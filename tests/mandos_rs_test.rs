@@ -1,3 +1,4 @@
+/*
 use elrond_wasm::*;
 use elrond_wasm_debug::*;
 
@@ -16,3 +17,4 @@ fn world() -> BlockchainMock {
 fn attestation_main_rs() {
 	elrond_wasm_debug::mandos_rs("mandos/main.scen.json", world());
 }
+*/

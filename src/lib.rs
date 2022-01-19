@@ -10,11 +10,6 @@ pub use value_state::ValueState;
 elrond_wasm::imports!();
 
 const HASH_LEN: usize = 32;
-const TEMP_HASH_INPUT_BUFFER_SIZE: usize = 200;
-
-extern "C" {
-	fn keccak256(dataOffset: *const u8, length: i32, resultOffset: *mut u8) -> i32;
-}
 
 #[elrond_wasm::contract]
 pub trait Attestation {
@@ -79,7 +74,7 @@ pub trait Attestation {
 
 		let user_state = User {
 			value_state: ValueState::Requested,
-			public_info: ManagedByteArray::managed_default(self.raw_vm_api()),
+			public_info: ManagedByteArray::default(),
 			private_info: ManagedBuffer::new(),
 			address: self.blockchain().get_caller(),
 			_attester: ManagedAddress::zero(),
@@ -156,7 +151,7 @@ pub trait Attestation {
 			"caller is not an attester"
 		);
 
-		let hashed = self.hash_unsafe(&private_info);
+		let hashed = self.crypto().keccak256(&private_info);
 		require!(
 			hashed == user_state.public_info,
 			"private/public info mismatch"
@@ -234,25 +229,6 @@ pub trait Attestation {
 		);
 
 		Ok(user_state.address)
-	}
-
-	// temporary until managed crypto API is available
-	fn hash_unsafe(&self, buffer: &ManagedBuffer) -> ManagedByteArray<Self::Api, HASH_LEN> {
-		unsafe {
-			let mut buffer_bytes = [0u8; TEMP_HASH_INPUT_BUFFER_SIZE];
-			let mut hashed_result = [0u8; HASH_LEN];
-
-			let buffer_len = buffer.len();
-			let _ = buffer.load_slice(0, &mut buffer_bytes[..buffer_len]);
-
-			keccak256(
-				buffer_bytes.as_ptr(),
-				buffer_len as i32,
-				hashed_result.as_mut_ptr(),
-			);
-
-			ManagedByteArray::new_from_bytes(self.raw_vm_api(), &hashed_result)
-		}
 	}
 
 	// STORAGE

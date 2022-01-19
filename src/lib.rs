@@ -79,7 +79,7 @@ pub trait Attestation {
 
 		let user_state = User {
 			value_state: ValueState::Requested,
-			public_info: ManagedByteArray::managed_default(self.raw_vm_api()),
+			public_info: ManagedByteArray::default(),
 			private_info: ManagedBuffer::new(),
 			address: self.blockchain().get_caller(),
 			_attester: ManagedAddress::zero(),
@@ -251,7 +251,7 @@ pub trait Attestation {
 				hashed_result.as_mut_ptr(),
 			);
 
-			ManagedByteArray::new_from_bytes(self.raw_vm_api(), &hashed_result)
+			ManagedByteArray::new_from_bytes(&hashed_result)
 		}
 	}
 

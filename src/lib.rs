@@ -19,7 +19,7 @@ pub trait Attestation {
 		registration_cost: BigUint,
 		max_nonce_diff: u64,
 		#[var_args] attesters: ManagedVarArgs<ManagedAddress>,
-	) -> SCResult<()> {
+	) {
 		require!(!attesters.is_empty(), "Cannot have empty attester list");
 
 		self.registration_cost().set(&registration_cost);
@@ -28,8 +28,6 @@ pub trait Attestation {
 		for attester in attesters {
 			self.attestator_state(&attester).set(&ValueState::Approved);
 		}
-
-		Ok(())
 	}
 
 	#[endpoint]
@@ -37,10 +35,7 @@ pub trait Attestation {
 		env!("CARGO_PKG_VERSION").as_bytes()
 	}
 
-	fn can_overwrite_user_data(
-		&self,
-		obfuscated_data: &ManagedByteArray<Self::Api, HASH_LEN>,
-	) -> SCResult<()> {
+	fn can_overwrite_user_data(&self, obfuscated_data: &ManagedByteArray<Self::Api, HASH_LEN>) {
 		if !self.user_state(obfuscated_data).is_empty() {
 			let existing_user_state = self.user_state(obfuscated_data).get();
 			require!(
@@ -53,7 +48,6 @@ pub trait Attestation {
 				"data already registered for other user"
 			);
 		}
-		Ok(())
 	}
 
 	/// Called by the user.
@@ -64,13 +58,13 @@ pub trait Attestation {
 		&self,
 		obfuscated_data: ManagedByteArray<Self::Api, HASH_LEN>,
 		#[payment] payment: BigUint,
-	) -> SCResult<()> {
+	) {
 		require!(
 			payment == self.registration_cost().get(),
 			"should pay the exact registration cost"
 		);
 
-		self.can_overwrite_user_data(&obfuscated_data)?;
+		self.can_overwrite_user_data(&obfuscated_data);
 
 		let user_state = User {
 			value_state: ValueState::Requested,
@@ -81,8 +75,6 @@ pub trait Attestation {
 			nonce: self.blockchain().get_block_nonce(),
 		};
 		self.user_state(&obfuscated_data).set(&user_state);
-
-		Ok(())
 	}
 
 	/// Called by the user.
@@ -92,7 +84,7 @@ pub trait Attestation {
 		&self,
 		obfuscated_data: &ManagedByteArray<Self::Api, HASH_LEN>,
 		public_info: ManagedByteArray<Self::Api, HASH_LEN>,
-	) -> SCResult<()> {
+	) {
 		require!(
 			!self.user_state(obfuscated_data).is_empty(),
 			"registration not started for user"
@@ -120,8 +112,6 @@ pub trait Attestation {
 		user_state.value_state = ValueState::Pending;
 
 		self.user_state(obfuscated_data).set(&user_state);
-
-		Ok(())
 	}
 
 	/// Called by the attestator.
@@ -130,7 +120,7 @@ pub trait Attestation {
 		&self,
 		obfuscated_data: ManagedByteArray<Self::Api, HASH_LEN>,
 		private_info: ManagedBuffer,
-	) -> SCResult<()> {
+	) {
 		let caller = self.blockchain().get_caller();
 		let attestator_s = self.attestator_state(&caller).get();
 		require!(attestator_s.exists(), "caller is not an attestator");
@@ -165,8 +155,6 @@ pub trait Attestation {
 		user_state.private_info = private_info;
 		user_state.value_state = ValueState::Approved;
 		self.user_state(&obfuscated_data).set(&user_state);
-
-		Ok(())
 	}
 
 	#[only_owner]
@@ -217,7 +205,7 @@ pub trait Attestation {
 	fn get_public_key(
 		&self,
 		obfuscated_data: ManagedByteArray<Self::Api, HASH_LEN>,
-	) -> SCResult<ManagedAddress> {
+	) -> ManagedAddress {
 		require!(
 			!self.user_state(&obfuscated_data).is_empty(),
 			"no user registered under key"
@@ -228,7 +216,7 @@ pub trait Attestation {
 			"userData not yet attested"
 		);
 
-		Ok(user_state.address)
+		user_state.address
 	}
 
 	// STORAGE

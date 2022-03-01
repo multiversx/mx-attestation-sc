@@ -18,7 +18,7 @@ pub trait Attestation {
 		&self,
 		registration_cost: BigUint,
 		max_nonce_diff: u64,
-		#[var_args] attesters: ManagedVarArgs<ManagedAddress>,
+		#[var_args] attesters: MultiValueEncoded<ManagedAddress>,
 	) {
 		require!(!attesters.is_empty(), "Cannot have empty attester list");
 
@@ -193,11 +193,11 @@ pub trait Attestation {
 	fn get_user_state_endpoint(
 		&self,
 		obfuscated_data: ManagedByteArray<Self::Api, HASH_LEN>,
-	) -> OptionalResult<User<Self::Api>> {
+	) -> OptionalValue<User<Self::Api>> {
 		if !self.user_state(&obfuscated_data).is_empty() {
-			OptionalResult::Some(self.user_state(&obfuscated_data).get())
+			OptionalValue::Some(self.user_state(&obfuscated_data).get())
 		} else {
-			OptionalResult::None
+			OptionalValue::None
 		}
 	}
 

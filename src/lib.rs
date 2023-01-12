@@ -178,14 +178,13 @@ pub trait Attestation {
 	#[only_owner]
 	#[endpoint]
 	fn claim(&self) {
-		let egld_token_id = TokenIdentifier::egld();
+		let egld_token_id = EgldOrEsdtTokenIdentifier::egld();
 		let contract_owner = self.blockchain().get_owner_address();
 		self.send().direct(
 			&contract_owner,
 			&egld_token_id,
 			0,
 			&self.blockchain().get_sc_balance(&egld_token_id, 0),
-			b"attestation claim",
 		);
 	}
 

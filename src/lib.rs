@@ -7,11 +7,11 @@ mod value_state;
 pub use user::User;
 pub use value_state::ValueState;
 
-elrond_wasm::imports!();
+multiversx_sc::imports!();
 
 const HASH_LEN: usize = 32;
 
-#[elrond_wasm::contract]
+#[multiversx_sc::contract]
 pub trait Attestation {
 	#[init]
 	fn init(

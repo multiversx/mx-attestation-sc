@@ -15,5 +15,6 @@ jobs:
       vmtools-version: v1.4.60
       extra-build-args: --ignore-eei-checks
       wasm-tests-args: --features run-go-tests
+      install-libtinfo5: true
     secrets:
       token: ${{ secrets.GITHUB_TOKEN }}

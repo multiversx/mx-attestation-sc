@@ -1,7 +1,7 @@
 use super::ValueState;
 
-elrond_wasm::imports!();
-elrond_wasm::derive_imports!();
+multiversx_sc::imports!();
+multiversx_sc::derive_imports!();
 
 #[derive(TopEncode, TopDecode, TypeAbi, Clone, PartialEq, Debug)]
 pub struct User<M: ManagedTypeApi> {

@@ -1,7 +1,8 @@
 [package]
 name = "attestation-wasm"
 version = "0.0.0"
-edition = "2018"
+edition = "2021"
+publish = false
 
 [lib]
 crate-type = ["cdylib"]
@@ -16,8 +17,8 @@ panic = "abort"
 [dependencies.attestation]
 path = ".."
 
+[dependencies.multiversx-sc-wasm-adapter]
+version = "0.45.1"
+
 [workspace]
 members = ["."]
-
-[dependencies.multiversx-sc-wasm-adapter]
-version = "0.39.0"

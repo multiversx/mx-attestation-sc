@@ -6,9 +6,7 @@ edition = "2018"
 
 [lib]
 path = "src/lib.rs"
-
 [dependencies.multiversx-sc]
-version = "0.39.0"
-
+version = "0.40.0"
 [dev-dependencies.multiversx-sc-scenario]
-version = "0.39.0"
+version = "0.40.0"

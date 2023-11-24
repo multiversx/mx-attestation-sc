@@ -1,7 +1,6 @@
 [package]
 name = "attestation-meta"
 version = "0.0.0"
-authors = ["andrei-marinica <andrei.marinica@elrond.com>"]
 edition = "2021"
 publish = false
 
@@ -9,4 +8,5 @@ publish = false
 path = ".."
 
 [dependencies.multiversx-sc-meta]
-version = "0.45.0"
+version = "0.45.1"
+default-features = false
